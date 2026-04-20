@@ -79,7 +79,26 @@ body,body *{transition:background-color .25s,color .25s,border-color .25s}
 .zd-inp:focus{border-color:var(--kite)}
 .zd-log{font-family:var(--mono);font-size:8px;color:var(--text3);max-height:50px;overflow-y:auto;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:3px 6px;flex:1;min-width:160px}
 
-/* UPLOAD */
+/* REGIME PANEL */
+.regime-panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-sm)}
+.regime-panel.full{border-top:3px solid var(--bull)}.regime-panel.bear{border-top:3px solid var(--bear)}.regime-panel.caution{border-top:3px solid var(--amber)}
+.regime-hdr{padding:7px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;cursor:pointer;user-select:none}
+.regime-overall{font-family:var(--mono);font-size:11px;font-weight:700;padding:4px 12px;border-radius:4px;border:1px solid transparent;display:flex;align-items:center;gap:6px}
+.ro-full{background:var(--bull-g);color:var(--bull);border-color:rgba(5,150,105,.3)}
+.ro-bear{background:var(--bear-g);color:var(--bear);border-color:rgba(220,38,38,.3)}
+.ro-caution{background:var(--amber-g);color:var(--amber);border-color:rgba(217,119,6,.3)}
+.regime-threshold{font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 10px;border-radius:4px;margin-left:auto}
+.rt-bull{background:var(--bull-g);color:var(--bull)}.rt-caution{background:var(--amber-g);color:var(--amber)}.rt-bear{background:var(--bear-g);color:var(--bear)}
+.regime-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;padding:0 14px 10px}
+.regime-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:6px 9px}
+.rc-name{font-family:var(--mono);font-size:9px;font-weight:700;color:var(--bright);margin-bottom:4px}
+.rc-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
+.rc-label{font-family:var(--mono);font-size:7px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.rc-val{font-family:var(--mono);font-size:8px;font-weight:600}
+.rc-bull{color:var(--bull)}.rc-bear{color:var(--bear)}.rc-neut{color:var(--text2)}.rc-amber{color:var(--amber)}
+.regime-bar{width:100%;height:3px;background:var(--bg3);border-radius:2px;margin-top:4px;overflow:hidden}
+.regime-fill{height:3px;border-radius:2px;transition:width .4s}
+.rf-bull{background:var(--bull)}.rf-bear{background:var(--bear)}.rf-neut{background:var(--amber)}
 .upload-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);padding:8px 14px;display:flex;align-items:center;gap:10px;box-shadow:var(--sh-sm)}
 .upload-zone{border:1.5px dashed var(--border2);border-radius:var(--r);padding:7px 14px;text-align:center;cursor:pointer;transition:.2s;background:var(--amber-g);display:flex;align-items:center;gap:8px}
 .upload-zone:hover,.upload-zone.drag{border-color:var(--amber);background:rgba(217,119,6,.06)}
@@ -275,6 +294,19 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
   </div>
 </div>
 
+<!-- REGIME PANEL -->
+<div class="regime-panel" id="regimePanel" style="display:none">
+  <div class="regime-hdr" onclick="toggleRegimeDetail()">
+    <i class="fas fa-chart-mixed" style="color:var(--amber);font-size:11px"></i>
+    <div class="regime-overall" id="regimeOverall">Loading…</div>
+    <div class="regime-threshold" id="regimeThreshold"></div>
+    <span style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-left:6px">▼ expand</span>
+  </div>
+  <div id="regimeDetail" style="display:none">
+    <div class="regime-grid" id="regimeGrid"></div>
+  </div>
+</div>
+
 <!-- PAGE TABS -->
 <div class="page-tabs">
   <button class="page-tab active" onclick="switchPage('scanner')"><i class="fas fa-bolt"></i> Signal Scanner <span class="badge" id="badgeBuy">0</span></button>
@@ -355,7 +387,7 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
         <label style="font-family:var(--mono);font-size:9px;color:var(--text2)">Capital ₹</label>
         <input class="fi" id="pfCapital" value="500000" style="width:100px">
         <label style="font-family:var(--mono);font-size:9px;color:var(--text2)">Min score</label>
-        <input class="fi" id="pfMinScore" value="45" style="width:55px">
+        <input class="fi" id="pfMinScore" value="55" style="width:55px">
         <button class="btn btn-a" onclick="createDailyPortfolios()"><i class="fas fa-plus"></i> Create Today's Portfolios</button>
         <button class="btn btn-g" onclick="updateDPFPnL()"><i class="fas fa-sync"></i> Update P&L</button>
         <button class="btn btn-r" onclick="dissolvePortfolios()"><i class="fas fa-check-circle"></i> Dissolve Expired</button>
@@ -530,8 +562,9 @@ const SMI_BULL = 40, SMI_BEAR = -40;
 const ATR_TP_DEF = 2.5, ATR_SL_DEF = 1.5;
 const BAND_LB = 60;
 
-const PRIOR_WR = {B2:62,B1OS:58,B1MOM:55,B3:48,S2:62,S1OB:57,S1MOM:54,S3:47};
-const PRIOR_BASE = {B2:32,'B1-OS':28,'B1-MOM':24,B3:16,S2:32,'S1-OB':28,'S1-MOM':24,S3:16};
+const PRIOR_WR = {'B1-OS':68,'B1-MOM':60,'B2':65,'B3':48,'S1-OB':67,'S1-MOM':59,'S2':64,'S3':47};
+const PRIOR_BASE = {'B1-OS':50,'B1-MOM':38,'B2':44,'B3':18,'S1-OB':50,'S1-MOM':38,'S2':44,'S3':18};
+const SIG_PRIORITY = {'B1-OS':5,'B2':4,'B1-MOM':3,'B3':1,'S1-OB':5,'S2':4,'S1-MOM':3,'S3':1};
 
 const DOW_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const DOW_DISSOLVE = {
@@ -940,32 +973,71 @@ function buildKellyData() {
 function getKelly(sym){return kellyData[sym]?kellyData[sym].kelly_pct:null}
 
 // ADAPTIVE SCORE (all layers combined)
-function adaptiveScore(sig, prevSig, regime, breadthPct, hvp, rr, weeklyTrend, currentDate, sym, bestInd) {
-  const base=PRIOR_BASE[sig]||20;
-  const aw=adaptiveWeights[sig];
-  let score=aw?aw.learned_w:base;
-  // Context WR bonus
-  const ctx=contextWRMap[buildCtxKey(sig,regime||'flat',getBkt(breadthPct||50,40,60),getBkt(hvp||50,30,60))];
-  if(ctx&&ctx.n>=3) score+=ctx.wr>=65?8:ctx.wr>=55?4:ctx.wr>=45?0:-8;
-  // Seq bonus (Layer 2)
-  score+=getSeqBonus(prevSig,sig);
-  // Regime transition (Layer 3)
-  const discount=getRegimeTransitionDiscount(currentDate);
-  score=Math.round(score*discount);
-  // Stock indicator preference (Layer 4)
-  score+=getIndBonus(sym,bestInd);
-  // Trend alignment
-  if(sig.startsWith('B')&&weeklyTrend==='bull')score+=12;
-  else if(sig.startsWith('S')&&weeklyTrend==='bear')score+=12;
-  else score+=3;
-  // HVP
-  if(hvp>60)score+=8;else if(hvp>40)score+=4;
-  // Breadth
-  if(sig.startsWith('B')&&breadthPct>60)score+=5;
-  else if(sig.startsWith('S')&&breadthPct<40)score+=5;
-  // R:R
-  if(rr>=2.5)score+=9;else if(rr>=1.5)score+=5;else if(rr>=1)score+=2;
-  return Math.min(100,Math.max(0,Math.round(score)));
+// ── IRAVAT-aligned base score (deterministic, 0-90)
+function baseScore(sig, bandZone, weeklyTrend, hvp, rr) {
+  let s = 0;
+  // 1. Signal type (0-30) — mirrors IRAVAT exactly
+  const sigS = {'B1-OS':28,'B1-MOM':22,'B2':30,'B3':10,
+                 'S1-OB':28,'S1-MOM':22,'S2':30,'S3':10};
+  s += sigS[sig] || 0;
+  // 2. Band zone (0-25) — mirrors IRAVAT exactly
+  const zS = {'rej_lo':25,'rej_hi':25,'below_va':15,'above_va':15,'va':5};
+  s += zS[bandZone] || 0;
+  // 3. Weekly trend alignment (0-15)
+  const isBuy = sig.startsWith('B'), isSell = sig.startsWith('S');
+  if((isBuy && weeklyTrend==='bull')||(isSell && weeklyTrend==='bear')) s += 15;
+  else if(weeklyTrend==='flat') s += 5;
+  else s += 0; // against trend = 0 bonus
+  // 4. HVP (0-10)
+  if(hvp >= 75) s += 10;
+  else if(hvp >= 60) s += 7;
+  else if(hvp >= 45) s += 4;
+  else if(hvp >= 30) s += 2;
+  else s += 0;
+  // 5. R:R (0-10)
+  const rrN = parseFloat(rr) || 0;
+  if(rrN >= 3.0)      s += 10;
+  else if(rrN >= 2.0) s += 7;
+  else if(rrN >= 1.5) s += 4;
+  else if(rrN >= 1.0) s += 2;
+  return s; // max = 30+25+15+10+10 = 90
+}
+
+function adaptiveScore(sig, prevSig, regime, breadthPct, hvp, rr, weeklyTrend, currentDate, sym, bestInd, bandZone, ret250) {
+  // LAYER 0: deterministic base (0-90, same logic as IRAVAT)
+  let score = baseScore(sig, bandZone, weeklyTrend, hvp, rr);
+
+  // LAYER 1: Context WR bonus (self-learning, 0-10)
+  const ctx = contextWRMap[buildCtxKey(sig, regime||'flat', getBkt(breadthPct||50,40,60), getBkt(hvp||50,30,60))];
+  if(ctx && ctx.n >= 3) score += ctx.wr>=70?10 : ctx.wr>=60?5 : ctx.wr>=50?2 : -5;
+
+  // LAYER 2: Signal sequence bonus (self-learning, -5 to +8)
+  score += getSeqBonus(prevSig, sig);
+
+  // LAYER 3: Regime transition discount
+  const discount = getRegimeTransitionDiscount(currentDate);
+  score = Math.round(score * discount);
+
+  // LAYER 4: Stock indicator preference (+5)
+  score += getIndBonus(sym, bestInd);
+
+  // LAYER 5: 250d momentum bonus (+0 to +5)
+  const isBuy = sig.startsWith('B'), isSell = sig.startsWith('S');
+  if(ret250 !== null && ret250 !== undefined) {
+    if(isBuy  && ret250 >= 50)       score += 5;
+    else if(isBuy  && ret250 >= 20)  score += 3;
+    else if(isBuy  && ret250 < -30)  score -= 3;
+    else if(isSell && ret250 <= -20) score += 5;
+    else if(isSell && ret250 <= -5)  score += 3;
+  }
+
+  return Math.min(100, Math.max(0, Math.round(score)));
+  // Max = 90 (base) + 10 (ctx) + 8 (seq) + 5 (indpref) + 5 (ret) = 118 → capped 100
+  // Score bands:
+  // 85-100 = IDEAL — B1-OS/B2 in rej zone, trend aligned, strong RR
+  // 70-84  = GOOD  — worth trading at normal size
+  // 55-69  = FAIR  — reduce size, confirm with regime
+  // <55    = SKIP  — B3/VA or against trend
 }
 function getLearntWR(sig,regime,bPct,hvp){
   const ctx=contextWRMap[buildCtxKey(sig,regime||'flat',getBkt(bPct||50,40,60),getBkt(hvp||50,30,60))];
@@ -1048,6 +1120,7 @@ async function processAll(bySymbol) {
   buildRegimeTransitions(bySymbol);
   const nseiR=regimeData['NSEI']||regimeData['CRSLDX']||{trend:'flat',hvp:50};
   const mktRegime=nseiR.trend;
+  buildRegimePanel();
   await sleep(0);
 
   const stockSyms=symbols.filter(s=>bySymbol[s].index!=='MAJOR INDEX');
@@ -1206,7 +1279,8 @@ async function processAll(bySymbol) {
     const prevSig=prevSigMap[sym]||null;
 
     // Score
-    const score=adaptiveScore(signal,prevSig,mktRegime,secBrd.pct,hvp,rr,weeklyTrend,rows[n].date,sym,globalBestInd);
+    const ret250=stockReturns[sym]?stockReturns[sym].ret_250:null;
+    const score=adaptiveScore(signal,prevSig,mktRegime,secBrd.pct,hvp,rr,weeklyTrend,rows[n].date,sym,globalBestInd,bandZone,ret250);
 
     // NSEI corr
     const nseiCorr=corrData[sym]?corrData[sym]['NSEI']||corrData[sym]['CRSLDX']||null:null;
@@ -1597,8 +1671,8 @@ function createDailyPortfolios() {
   // Check duplicate
   const existing=dailyPortfolios.find(p=>p.createdDate===dayInfo.createdDate&&p.status==='active');
   if(existing){toast(`Portfolio for ${dayInfo.dayName} ${dayInfo.createdDate} already exists`,'info');renderPage2();return}
-  const buys=allSignals.filter(s=>s.signal.startsWith('B')&&s.score>=minScore).sort((a,b)=>b.score-a.score);
-  const sells=allSignals.filter(s=>s.signal.startsWith('S')&&s.score>=minScore).sort((a,b)=>b.score-a.score);
+  const buys=allSignals.filter(s=>s.signal.startsWith('B')&&s.score>=minScore).sort((a,b)=>top25Sort(a,b,'score'));
+  const sells=allSignals.filter(s=>s.signal.startsWith('S')&&s.score>=minScore).sort((a,b)=>top25Sort(a,b,'score'));
   const max25=25;
   const buyList=buys.slice(0,max25), sellList=sells.slice(0,max25);
   if(buyList.length===0&&sellList.length===0){toast(`No signals above score ${minScore}. Lower threshold.`,'err');return}
@@ -1898,20 +1972,47 @@ function renderPage1() {
   document.getElementById('sigSection').style.display='block';
 }
 
+function top25Sort(a, b, col) {
+  // Primary: chosen sort column
+  const va = a[col] !== null && a[col] !== undefined ? a[col] : -Infinity;
+  const vb = b[col] !== null && b[col] !== undefined ? b[col] : -Infinity;
+  if(vb !== va) return vb - va;
+  // Tiebreakers: signal priority → HVP → R:R → 250d return
+  const pa = SIG_PRIORITY[a.signal]||1, pb = SIG_PRIORITY[b.signal]||1;
+  if(pb !== pa) return pb - pa;
+  if(b.hvp !== a.hvp) return b.hvp - a.hvp;
+  if(b.rr !== a.rr) return b.rr - a.rr;
+  const ra = a.ret_250||0, rb = b.ret_250||0;
+  return rb - ra;
+}
+
 function renderTop25() {
-  const buys=allSignals.filter(s=>s.signal.startsWith('B')).sort((a,b)=>b[top25SortBuy]-a[top25SortBuy]).slice(0,25);
-  const sells=allSignals.filter(s=>s.signal.startsWith('S')).sort((a,b)=>b[top25SortSell]-a[top25SortSell]).slice(0,25);
+  const thr = getRegimeThreshold();
+  const buys=allSignals.filter(s=>s.signal.startsWith('B')).sort((a,b)=>top25Sort(a,b,top25SortBuy)).slice(0,25);
+  const sells=allSignals.filter(s=>s.signal.startsWith('S')).sort((a,b)=>top25Sort(a,b,top25SortSell)).slice(0,25);
+
+  // Update header threshold hint
+  ['Buy','Sell'].forEach(t=>{
+    const hdr=document.querySelector(`.top25-hdr.${t.toLowerCase()}`);
+    if(hdr){
+      let hint=hdr.querySelector('.thr-hint');
+      if(!hint){hint=document.createElement('div');hint.className='thr-hint regime-threshold rt-'+(overallRegime==='full'?'bull':overallRegime==='bear'?'bear':'caution');hdr.appendChild(hint)}
+      hint.textContent=`Regime: ${thr}+ ideal`;
+    }
+  });
   const row=(s,i)=>{
     const kStr=s.kelly_pct!==null?`${s.kelly_pct}%`:'—';
     const wrStr=s.learnedWR?`${s.learnedWR}%`:'—';
     const sqStr=s.seqWR!==null?`${s.seqWR}%`:'—';
     const retStr=s.ret_250!==null?`${s.ret_250>0?'+':''}${s.ret_250}%`:'—';
     const bz=bandZoneBadge(s.band_zone);
+    const scoreCls=s.score>=thr?'c-bull':s.score>=(thr-15)?'c-amb':'c-dim';
+    const idealFlag=s.score>=thr?'★ ':'';
     return`<tr class="${sigClass(s.signal)}">
-      <td class="c-dim">${i+1}</td>
+      <td class="c-dim">${idealFlag}${i+1}</td>
       <td><strong>${s.symbol}</strong></td>
       <td>${sigBadge(s.signal)}</td>
-      <td><strong class="${s.score>=70?'c-bull':s.score>=50?'c-amb':'c-dim'}">${s.score}</strong></td>
+      <td><strong class="${scoreCls}">${s.score}</strong></td>
       <td>${bz}</td>
       <td><span class="${s.hvp>60?'c-bull':s.hvp<35?'c-bear':'c-amb'}">${s.hvp}</span></td>
       <td>₹${s.cmp.toFixed(1)}</td>
@@ -2377,8 +2478,100 @@ function renderRetCorr() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// HELPERS
+// REGIME PANEL (IRAVAT-style)
 // ═══════════════════════════════════════════════════════════
+let overallRegime = 'caution';
+
+function buildRegimePanel() {
+  const keys = Object.keys(regimeData);
+  if(!keys.length) return;
+  const panel = document.getElementById('regimePanel');
+  const grid  = document.getElementById('regimeGrid');
+  const ovEl  = document.getElementById('regimeOverall');
+  const thrEl = document.getElementById('regimeThreshold');
+  panel.style.display = 'block';
+
+  // Count bull/bear across all major indices
+  let bullC=0, bearC=0, total=keys.length;
+  keys.forEach(k=>{
+    const r=regimeData[k];
+    if(r.trend==='bull')bullC++;
+    else if(r.trend==='bear')bearC++;
+  });
+
+  if(bullC===total)           overallRegime='full';
+  else if(bearC===total)      overallRegime='bear';
+  else if(bearC>bullC)        overallRegime='bear';
+  else if(bullC>0&&bearC>0)   overallRegime='mixed';
+  else                         overallRegime='caution';
+
+  panel.className = 'regime-panel ' + (overallRegime==='full'?'full':overallRegime==='bear'?'bear':'caution');
+
+  // Overall badge
+  const ovMap = {
+    full:    ['ro-full',    'fas fa-circle-check',          '✅ FULL BULL — All indices green. Min score: 60'],
+    mixed:   ['ro-caution', 'fas fa-triangle-exclamation',  '⚠️ MIXED SIGNALS — Indices disagree. Min score: 70'],
+    caution: ['ro-caution', 'fas fa-triangle-exclamation',  '⚠️ CAUTION — Weak regime. Min score: 75'],
+    bear:    ['ro-bear',    'fas fa-circle-xmark',          '🔴 BEAR REGIME — Only 85+ scores. Prefer SELL.'],
+  };
+  const [cls, ico, txt] = ovMap[overallRegime] || ovMap.caution;
+  ovEl.className = 'regime-overall ' + cls;
+  ovEl.innerHTML = `<i class="${ico}"></i> ${txt}`;
+
+  // Dynamic threshold badge
+  const thr = getRegimeThreshold();
+  thrEl.className = 'regime-threshold ' + (overallRegime==='full'?'rt-bull':overallRegime==='bear'?'rt-bear':'rt-caution');
+  thrEl.textContent = `Min Score: ${thr}+`;
+
+  // Also update the portfolio min score input dynamically
+  const pfMs = document.getElementById('pfMinScore');
+  if(pfMs) pfMs.value = thr;
+
+  // Individual index cards
+  grid.innerHTML = '';
+  keys.forEach(sym=>{
+    const r = regimeData[sym];
+    const tCls = r.trend==='bull'?'rc-bull':r.trend==='bear'?'rc-bear':'rc-neut';
+    const fillW = r.trend==='bull'?75:r.trend==='bear'?25:50;
+    const fillCls = r.trend==='bull'?'rf-bull':r.trend==='bear'?'rf-bear':'rf-neut';
+    const hvpCls = r.hvp>60?'rc-bull':r.hvp<35?'rc-bear':'rc-amber';
+    const card = document.createElement('div');
+    card.className = 'regime-card';
+    card.innerHTML = `
+      <div class="rc-name">${sym}</div>
+      <div class="rc-row">
+        <span class="rc-label">Trend</span>
+        <span class="rc-val ${tCls}">${r.trend.toUpperCase()} ${r.trend==='bull'?'▲':r.trend==='bear'?'▼':'~'}</span>
+      </div>
+      <div class="rc-row">
+        <span class="rc-label">HV%</span>
+        <span class="rc-val ${hvpCls}">${r.hvp}%ile</span>
+      </div>
+      <div class="rc-row">
+        <span class="rc-label">HV</span>
+        <span class="rc-val rc-neut">${r.hv}%</span>
+      </div>
+      <div class="regime-bar"><div class="regime-fill ${fillCls}" style="width:${fillW}%"></div></div>`;
+    grid.appendChild(card);
+  });
+}
+
+function getRegimeThreshold() {
+  if(overallRegime==='full')    return 60;
+  if(overallRegime==='mixed')   return 70;
+  if(overallRegime==='caution') return 75;
+  if(overallRegime==='bear')    return 85;
+  return 70;
+}
+
+function toggleRegimeDetail() {
+  const d = document.getElementById('regimeDetail');
+  const lbl = document.querySelector('.regime-hdr span:last-child');
+  if(!d) return;
+  const open = d.style.display !== 'none';
+  d.style.display = open ? 'none' : 'block';
+  if(lbl) lbl.textContent = open ? '▼ expand' : '▲ collapse';
+}
 function sigBadge(sig){
   const cls={B2:'b-bull',B1OS:'b-bull','B1-OS':'b-bull','B1-MOM':'b-teal',B3:'b-teal',S2:'b-bear','S1-OB':'b-bear','S1-MOM':'b-pink',S3:'b-pink'};
   const c=cls[sig]||'b-dim';
