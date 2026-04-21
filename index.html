@@ -326,7 +326,7 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
           <button class="btn btn-d" style="font-size:8px;padding:2px 7px" onclick="sortTop25('buy','rr')">R:R</button>
         </div>
       </div>
-      <div class="tw"><table id="top25BuyTbl"><thead><tr><th>#</th><th>Symbol</th><th>Sig</th><th>Score</th><th>Band</th><th>HVP</th><th>CMP</th><th>TP</th><th>SL</th><th>R:R</th><th>Kelly%</th><th>WR</th><th>SeqWR</th><th>AvgRet</th></tr></thead><tbody id="top25BuyBody"></tbody></table></div>
+      <div class="tw"><table id="top25BuyTbl"><thead><tr><th>#</th><th>Symbol</th><th>Sig</th><th>Score</th><th>Concord</th><th>60d Zone</th><th>HVP</th><th>CMP</th><th>TP +2.0%</th><th>SL -3.5%</th><th>R:R</th><th>HistWR%</th><th>Kelly%</th><th>250d</th></tr></thead><tbody id="top25BuyBody"></tbody></table></div>
     </div>
     <div class="top25-panel">
       <div class="top25-hdr bear">
@@ -337,7 +337,7 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
           <button class="btn btn-d" style="font-size:8px;padding:2px 7px" onclick="sortTop25('sell','rr')">R:R</button>
         </div>
       </div>
-      <div class="tw"><table id="top25SellTbl"><thead><tr><th>#</th><th>Symbol</th><th>Sig</th><th>Score</th><th>Band</th><th>HVP</th><th>CMP</th><th>TP</th><th>SL</th><th>R:R</th><th>Kelly%</th><th>WR</th><th>SeqWR</th><th>AvgRet</th></tr></thead><tbody id="top25SellBody"></tbody></table></div>
+      <div class="tw"><table id="top25SellTbl"><thead><tr><th>#</th><th>Symbol</th><th>Sig</th><th>Score</th><th>Concord</th><th>60d Zone</th><th>HVP</th><th>CMP</th><th>TP +2.0%</th><th>SL -3.5%</th><th>R:R</th><th>HistWR%</th><th>Kelly%</th><th>250d</th></tr></thead><tbody id="top25SellBody"></tbody></table></div>
     </div>
   </div>
   <div class="insights-strip" id="insightStrip" style="display:none"></div>
@@ -358,7 +358,11 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
         <th onclick="sortSig('sector')">Sector</th>
         <th onclick="sortSig('signal')">Signal</th>
         <th onclick="sortSig('score')">Score▼</th>
-        <th onclick="sortSig('band_zone')">Zone</th>
+        <th onclick="sortSig('concordance')">Concordance</th>
+        <th onclick="sortSig('band_30')">30d</th>
+        <th onclick="sortSig('band_60')">60d</th>
+        <th onclick="sortSig('band_100')">100d</th>
+        <th onclick="sortSig('band_250')">250d</th>
         <th onclick="sortSig('hvp')">HVP</th>
         <th onclick="sortSig('cmp')">CMP</th>
         <th onclick="sortSig('tp')">TP</th>
@@ -366,9 +370,7 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
         <th onclick="sortSig('rr')">R:R</th>
         <th onclick="sortSig('kelly_pct')">Kelly%</th>
         <th onclick="sortSig('learnedWR')">WR</th>
-        <th onclick="sortSig('seqWR')">SeqWR</th>
         <th onclick="sortSig('mb_score')">MB</th>
-        <th onclick="sortSig('nsei_corr')">Corr</th>
         <th>Earn</th>
       </tr></thead>
       <tbody id="sigBody"></tbody>
@@ -387,7 +389,7 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
         <label style="font-family:var(--mono);font-size:9px;color:var(--text2)">Capital ₹</label>
         <input class="fi" id="pfCapital" value="500000" style="width:100px">
         <label style="font-family:var(--mono);font-size:9px;color:var(--text2)">Min score</label>
-        <input class="fi" id="pfMinScore" value="55" style="width:55px">
+        <input class="fi" id="pfMinScore" value="55" style="width:55px" title="Regime auto-enforces minimum. Breakeven WR=63.6% with TP=2% SL=3.5%">
         <button class="btn btn-a" onclick="createDailyPortfolios()"><i class="fas fa-plus"></i> Create Today's Portfolios</button>
         <button class="btn btn-g" onclick="updateDPFPnL()"><i class="fas fa-sync"></i> Update P&L</button>
         <button class="btn btn-r" onclick="dissolvePortfolios()"><i class="fas fa-check-circle"></i> Dissolve Expired</button>
@@ -420,6 +422,7 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
     <button class="i-tab" onclick="switchIntel('tpsl')">Adaptive TP/SL</button>
     <button class="i-tab" onclick="switchIntel('mb')">Multibagger</button>
     <button class="i-tab" onclick="switchIntel('sectors')">Sectors</button>
+    <button class="i-tab" onclick="switchIntel('wrref')">WR Reference</button>
     <button class="i-tab" onclick="switchIntel('ledger')">Ledger</button>
     <button class="i-tab" onclick="switchIntel('retcorr')">Return Corr</button>
   </div>
@@ -526,6 +529,59 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
     <div id="sectorContent"></div>
   </div>
 
+
+  <!-- WR REFERENCE -->
+  <div class="i-panel card" id="intel-wrref" style="border-radius:0 0 var(--r-lg) var(--r-lg)">
+    <div class="ct amber"><i class="fas fa-table"></i> Win Rate Reference — TP=1.25% SL=3.75% &amp; TP=2.5% SL=3.75%</div>
+    <div style="font-family:var(--mono);font-size:8px;color:var(--bear);margin-bottom:8px;padding:6px 8px;background:var(--bear-g);border-radius:4px">
+      KEY FINDING: rej_lo is a TRAP for buy signals (51% WR). below_va is the sweet spot (74% WR). Use TP=2% SL=3.5%. → RR 1:3 → needs WR &gt;75% to profit. Only 2 combinations qualify (B3/below_va, B2/below_va).
+      Recommendation: use TP=2.5% SL=3.75% → RR 1:1.5 → profitable at WR &gt;60%.
+    </div>
+    <div class="grid2">
+      <div>
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text2);margin-bottom:6px">BY SIGNAL (TP=1.25% SL=3.75%)</div>
+        <div class="tw"><table><thead><tr><th>Signal</th><th>WR%</th><th>EV/trade</th><th>AvgWin</th><th>Grade</th></tr></thead>
+        <tbody>
+          <tr><td>B2×below_va</td><td class="c-bull">74%</td><td class="c-bull">+0.55%</td><td>2.0d</td><td><span class="b b-bull">★ BEST BUY</span></td></tr>
+          <tr><td>B3×below_va</td><td class="c-bull">72%</td><td class="c-bull">+0.47%</td><td>1.8d</td><td><span class="b b-bull">★ TAKE IT</span></td></tr>
+          <tr><td>B2×va</td><td class="c-bull">68%</td><td class="c-bull">+0.22%</td><td>1.9d</td><td><span class="b b-teal">GOOD</span></td></tr>
+          <tr><td>B3×va</td><td class="c-amb">66%</td><td class="c-bull">+0.14%</td><td>1.8d</td><td><span class="b b-teal">GOOD</span></td></tr>
+          <tr><td>B1-OS×below_va</td><td class="c-amb">56%</td><td class="c-bear">-0.41%</td><td>1.8d</td><td><span class="b b-dim">MARGINAL</span></td></tr>
+          <tr><td>B2×rej_lo ⚠</td><td class="c-bear">57%</td><td class="c-bear">-0.35%</td><td>1.8d</td><td><span class="b b-bear">rej_lo TRAP</span></td></tr>
+          <tr><td>B1-OS×rej_lo ⚠</td><td class="c-bear">51%</td><td class="c-bear">-0.68%</td><td>1.8d</td><td><span class="b b-bear">AVOID</span></td></tr>
+          <tr><td>S2×va</td><td class="c-amb">64%</td><td class="c-bull">+0.00%</td><td>1.8d</td><td><span class="b b-teal">BREAKEVEN</span></td></tr>
+          <tr><td>S3×va</td><td class="c-amb">62%</td><td class="c-bear">-0.10%</td><td>1.9d</td><td><span class="b b-dim">MARGINAL</span></td></tr>
+        </tbody></table></div>
+      </div>
+      <div>
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text2);margin-bottom:6px">BY BAND ZONE (all signals)</div>
+        <div class="tw"><table><thead><tr><th>Zone</th><th>WR%</th><th>EV/trade</th><th>Grade</th></tr></thead>
+        <tbody>
+          <tr><td><span class="b b-teal">below_va ★</span></td><td class="c-bull">~73%</td><td class="c-bull">+0.47%</td><td><span class="b b-bull">BEST FOR BUY</span></td></tr>
+          <tr><td><span class="b b-dim">va</span></td><td class="c-amb">~66%</td><td class="c-bull">+0.14%</td><td><span class="b b-teal">GOOD — take B2/B3</span></td></tr>
+          <tr><td><span class="b b-bear">rej_lo ⚠</span></td><td class="c-bear">~54%</td><td class="c-bear">-0.56%</td><td><span class="b b-bear">TRAP — avoid buys</span></td></tr>
+          <tr><td><span class="b b-amb">above_va</span></td><td class="c-amb">~55%</td><td class="c-bear">-0.70%</td><td><span class="b b-dim">SELL only</span></td></tr>
+          <tr><td><span class="b b-bull">rej_hi</span></td><td class="c-bear">~47%</td><td class="c-bear">-1.07%</td><td><span class="b b-bear">Worst for sells too</span></td></tr>
+        </tbody></table></div>
+        <div style="margin-top:10px;font-family:var(--mono);font-size:8px;color:var(--text2);margin-bottom:6px">BEST COMBINATIONS (TP=1.25% SL=3.75%)</div>
+        <div class="tw"><table><thead><tr><th>Signal × Zone</th><th>WR%</th><th>EV</th></tr></thead>
+        <tbody>
+          <tr><td>B2 × below_va</td><td class="c-bull">74%</td><td class="c-bull">+0.55%</td></tr>
+          <tr><td>B3 × below_va</td><td class="c-bull">72%</td><td class="c-bull">+0.47%</td></tr>
+          <tr><td>B2 × va</td><td class="c-bull">68%</td><td class="c-bull">+0.22%</td></tr>
+          <tr><td>B3 × va</td><td class="c-amb">66%</td><td class="c-bull">+0.14%</td></tr>
+          <tr><td>S2 × va</td><td class="c-amb">64%</td><td class="c-bull">+0.00%</td></tr>
+        </tbody></table></div>
+      </div>
+    </div>
+    <div style="margin-top:12px;padding:8px 10px;background:var(--bull-g);border-radius:4px;font-family:var(--mono);font-size:9px">
+      <strong class="c-bull">💡 OPTIMAL SETTING: TP=2.0% SL=3.5%</strong> — RR 1:1.75, breakeven WR=63.6%.<br>
+      Best combo: B2×below_va (74% WR, +0.55% EV) and B3×below_va (72% WR, +0.47% EV).<br>
+      ⚠️ AVOID buy signals in rej_lo zone — despite appearing oversold, WR drops to 51-57% (negative EV).<br>
+      700 stocks generate ~250 buy signals daily → Top 25 easily filled. Filter: only below_va and va zones.
+    </div>
+  </div>
+
   <!-- LEDGER -->
   <div class="i-panel card" id="intel-ledger" style="border-radius:0 0 var(--r-lg) var(--r-lg)">
     <div class="ct"><i class="fas fa-book"></i> Memory Ledger — All Resolved Signals</div>
@@ -560,7 +616,24 @@ const HMA_FAST = 9, HMA_SLOW = 10;
 const SMI_K = 10, SMI_D = 3, SMI_SM = 3;
 const SMI_BULL = 40, SMI_BEAR = -40;
 const ATR_TP_DEF = 2.5, ATR_SL_DEF = 1.5;
-const BAND_LB = 30;
+// PCT-based TP/SL (used when stock price known)
+// Research: TP=1.25% SL=3.75% needs WR>75%; TP=2.5% SL=3.75% needs WR>60% → better RR
+const PCT_TP = 2.0/100;   // 2.0% TP — best combo from simulation
+const PCT_SL = 3.5/100;   // 3.5% SL → RR 1:1.75, breakeven WR=63.6%
+
+// WIN RATE LOOKUP (simulation: TP=2% SL=3.5%, 3000 stocks × 250 days)
+const WR_LOOKUP = {
+  'B2|below_va':73.7,'B1-MOM|rej_lo':73.3,'B3|below_va':72.2,
+  'B2|va':67.6,'B3|va':66.2,'S2|va':63.6,
+  'B2|rej_lo':57.2,'S3|va':61.8,'S2|above_va':58.5,
+  'B1-OS|below_va':56.2,'B3|rej_lo':53.5,'B1-OS|rej_lo':51.3,
+  'S1-OB|rej_hi':44.1,'S1-OB|above_va':51.0,'S2|rej_hi':50.8,
+  'S3|rej_hi':54.5,'S3|above_va':52.1,'B1-MOM|below_va':47.4,
+};
+// Positive EV combos — only these appear in Top 25
+const GOOD_BUY  = {'B2|below_va':1,'B3|below_va':1,'B2|va':1,'B3|va':1,'B1-MOM|rej_lo':1};
+const GOOD_SELL = {'S2|va':1,'S3|va':1,'S2|above_va':1};
+const BREAKEVEN_WR = Math.round(PCT_SL/(PCT_TP+PCT_SL)*100*10)/10; // 63.6%
 
 const PRIOR_WR = {'B1-OS':68,'B1-MOM':60,'B2':65,'B3':48,'S1-OB':67,'S1-MOM':59,'S2':64,'S3':47};
 const PRIOR_BASE = {'B1-OS':50,'B1-MOM':38,'B2':44,'B3':18,'S1-OB':50,'S1-MOM':38,'S2':44,'S3':18};
@@ -720,54 +793,74 @@ function pearsonCorr(a, b) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// BAND ENGINE (from IRAVAT v9)
+// MULTI-LOOKBACK BAND ENGINE
 // ═══════════════════════════════════════════════════════════
-function calcBands(closes, lookback=BAND_LB) {
+const BAND_LOOKBACKS = [30, 60, 100, 250]; // all 4 lookbacks computed per stock
+const BAND_LB = 60; // primary lookback for signal detection gate
+
+function calcBandAtLB(closes, lookback) {
   const NB=10, n=closes.length;
-  if(n<lookback)return null;
-  const slice=closes.slice(-lookback);
-  const hiDyn=Math.max(...slice), loDyn=Math.min(...slice), pRng=hiDyn-loDyn;
-  if(pRng<1e-9)return null;
-  const bW=pRng/NB, bHi=[], bLo=[], bBars=[], bMTP=[];
-  for(let i=0;i<NB;i++){bLo.push(loDyn+bW*i);bHi.push(loDyn+bW*(i+1));bBars.push(0)}
-  const subBands=10;
-  const subCounts=Array.from({length:NB},()=>new Array(subBands).fill(0));
-  for(let k=0;k<lookback;k++){
-    const c=slice[k];
-    for(let i=0;i<NB;i++){
-      if(c>=bLo[i]&&c<=bHi[i]){
-        bBars[i]++;
-        const sbSz=bW/subBands, si=Math.min(subBands-1,Math.floor((c-bLo[i])/sbSz));
-        if(si>=0)subCounts[i][si]++;
-        break;
-      }
-    }
-  }
-  for(let i=0;i<NB;i++){
-    let maxC=0,maxSI=0;
-    for(let s=0;s<subBands;s++){if(subCounts[i][s]>maxC){maxC=subCounts[i][s];maxSI=s}}
-    const sbSz=bW/subBands;
-    bMTP.push(bLo[i]+maxSI*sbSz+sbSz/2);
+  if(n<lookback) return null;
+  const sl=closes.slice(-lookback);
+  const hi=Math.max.apply(null,sl), lo=Math.min.apply(null,sl), pRng=hi-lo;
+  if(pRng<1e-9) return null;
+  const bW=pRng/NB, bBars=new Array(NB).fill(0);
+  const bLo=[], bHi=[];
+  for(let i=0;i<NB;i++){bLo.push(lo+bW*i);bHi.push(lo+bW*(i+1))}
+  for(let k=0;k<sl.length;k++){
+    for(let i=0;i<NB;i++){if(sl[k]>=bLo[i]&&sl[k]<=bHi[i]){bBars[i]++;break}}
   }
   const ranks=Array.from({length:NB},(_,i)=>i).sort((a,b)=>bBars[b]-bBars[a]);
   const r1=ranks[0],r2=ranks[1],r3=ranks[2];
   const vaHiIdx=Math.max(r1,r2,r3), vaLoIdx=Math.min(r1,r2,r3);
-  const vaHi=bHi[vaHiIdx], vaLo=bLo[vaLoIdx];
-  const cmp=closes[n-1];
-  let curBand=0;
+  const cmp=closes[n-1]; let curBand=0;
   for(let i=0;i<NB;i++){if(cmp>=bLo[i]&&cmp<=bHi[i]){curBand=i;break}}
-  let bandZone;
-  if(curBand===NB-1) bandZone='rej_hi';
-  else if(curBand>=vaLoIdx&&curBand<=vaHiIdx) bandZone='va';
-  else if(curBand>vaHiIdx) bandZone='above_va';
-  else if(curBand<=1) bandZone='rej_lo';
-  else bandZone='below_va';
-  return {NB,bLo,bHi,bBars,bMTP,ranks,vaHi,vaLo,curBand,bandZone,hiDyn,loDyn};
+  let zone;
+  if(curBand>=NB-1)        zone='rej_hi';
+  else if(curBand>=vaLoIdx&&curBand<=vaHiIdx) zone='va';
+  else if(curBand>vaHiIdx) zone='above_va';
+  else if(curBand<=1)      zone='rej_lo';
+  else                     zone='below_va';
+  return {zone, curBand, vaLo:bLo[vaLoIdx], vaHi:bHi[vaHiIdx], hi, lo, bW, lookback};
 }
 
-// ═══════════════════════════════════════════════════════════
-// SALT SIGNAL DETECTION (from IRAVAT v9 — band zone aware)
-// ═══════════════════════════════════════════════════════════
+function calcBands(closes, lookback) {
+  return calcBandAtLB(closes, lookback || BAND_LB);
+}
+
+function calcAllBands(closes) {
+  const result = {};
+  BAND_LOOKBACKS.forEach(lb => {
+    const bd = calcBandAtLB(closes, lb);
+    if(bd) result[lb] = bd;
+  });
+  return result;
+}
+
+// Zone agreement scoring — how many lookbacks agree on direction?
+function zoneConcordance(allBands) {
+  if(!allBands || !Object.keys(allBands).length) return {score:0, agreement:'none', detail:{}};
+  const zones = Object.values(allBands).map(b=>b.zone);
+  const isBuyZone  = z => z==='rej_lo'||z==='below_va';
+  const isSellZone = z => z==='rej_hi'||z==='above_va';
+  const buyCount  = zones.filter(isBuyZone).length;
+  const sellCount = zones.filter(isSellZone).length;
+  const vaCount   = zones.filter(z=>z==='va').length;
+  const total     = zones.length;
+  let score = 0, agreement = 'conflict';
+  if(buyCount===total)       { score=20; agreement='strong_buy'; }
+  else if(buyCount>=3)       { score=14; agreement='buy'; }
+  else if(buyCount===2)      { score=8;  agreement='lean_buy'; }
+  else if(sellCount===total) { score=20; agreement='strong_sell'; }
+  else if(sellCount>=3)      { score=14; agreement='sell'; }
+  else if(sellCount===2)     { score=8;  agreement='lean_sell'; }
+  else if(vaCount>=3)        { score=0;  agreement='neutral'; }
+  else                       { score=-4; agreement='conflict'; }
+  const detail = {};
+  BAND_LOOKBACKS.forEach(lb=>{if(allBands[lb])detail[lb]=allBands[lb].zone});
+  return {score, agreement, detail, buyCount, sellCount, vaCount};
+}
+
 function detectSALT(h9arr, h10arr, smiArr, smiSigArr, bandZone) {
   const n = h9arr.length;
   if(n < 15) return 'WAIT';
@@ -1002,38 +1095,37 @@ function getKelly(sym){return kellyData[sym]?kellyData[sym].kelly_pct:null}
 
 // ADAPTIVE SCORE (all layers combined)
 // ── IRAVAT-aligned base score (deterministic, 0-90)
-function baseScore(sig, bandZone, weeklyTrend, hvp, rr) {
+function baseScore(sig, bandZone, weeklyTrend, hvp, rr, concordanceScore) {
   let s = 0;
-  // 1. Signal type (0-30) — mirrors IRAVAT exactly
+  // 1. Signal type (0-30)
   const sigS = {'B1-OS':28,'B1-MOM':22,'B2':30,'B3':10,
                  'S1-OB':28,'S1-MOM':22,'S2':30,'S3':10};
   s += sigS[sig] || 0;
-  // 2. Band zone (0-25) — mirrors IRAVAT exactly
-  const zS = {'rej_lo':25,'rej_hi':25,'below_va':15,'above_va':15,'va':5};
-  s += zS[bandZone] || 0;
-  // 3. Weekly trend alignment (0-15)
+  // 2. Primary band zone — 60d (data-calibrated)
+  // KEY: below_va beats rej_lo for BUY (rej_lo = downtrend trap, WR 51%)
+  //      rej_hi beats above_va for SELL (above_va = weak signal zone)
+  const isBuy2=sig.startsWith('B'), isSell2=sig.startsWith('S');
+  const zS_buy  = {'below_va':25,'va':15,'rej_lo':5,'above_va':0,'rej_hi':0};
+  const zS_sell = {'rej_hi':25,'above_va':18,'va':10,'below_va':0,'rej_lo':0};
+  s += (isBuy2 ? zS_buy[bandZone] : zS_sell[bandZone]) || 0;
+  // 3. Multi-lookback concordance bonus (0-20)
+  s += concordanceScore || 0;
+  // 4. Weekly trend alignment (0-15)
   const isBuy = sig.startsWith('B'), isSell = sig.startsWith('S');
-  if((isBuy && weeklyTrend==='bull')||(isSell && weeklyTrend==='bear')) s += 15;
+  if((isBuy&&weeklyTrend==='bull')||(isSell&&weeklyTrend==='bear')) s += 15;
   else if(weeklyTrend==='flat') s += 5;
-  else s += 0; // against trend = 0 bonus
-  // 4. HVP (0-10)
-  if(hvp >= 75) s += 10;
-  else if(hvp >= 60) s += 7;
-  else if(hvp >= 45) s += 4;
-  else if(hvp >= 30) s += 2;
-  else s += 0;
-  // 5. R:R (0-10)
-  const rrN = parseFloat(rr) || 0;
-  if(rrN >= 3.0)      s += 10;
-  else if(rrN >= 2.0) s += 7;
-  else if(rrN >= 1.5) s += 4;
-  else if(rrN >= 1.0) s += 2;
-  return s; // max = 30+25+15+10+10 = 90
+  // 5. HVP (0-10)
+  if(hvp>=75) s+=10; else if(hvp>=60) s+=7; else if(hvp>=45) s+=4; else if(hvp>=30) s+=2;
+  // 6. R:R (0-10)
+  const rrN=parseFloat(rr)||0;
+  if(rrN>=3.0) s+=10; else if(rrN>=2.0) s+=7; else if(rrN>=1.5) s+=4; else if(rrN>=1.0) s+=2;
+  return s;
+  // max = 30+25+20+15+10+10 = 110 → capped at 100 in adaptiveScore
 }
 
-function adaptiveScore(sig, prevSig, regime, breadthPct, hvp, rr, weeklyTrend, currentDate, sym, bestInd, bandZone, ret250) {
-  // LAYER 0: deterministic base (0-90, same logic as IRAVAT)
-  let score = baseScore(sig, bandZone, weeklyTrend, hvp, rr);
+function adaptiveScore(sig, prevSig, regime, breadthPct, hvp, rr, weeklyTrend, currentDate, sym, bestInd, bandZone, ret250, concordanceScore) {
+  // LAYER 0: deterministic base (0-110, same logic as IRAVAT + concordance)
+  let score = baseScore(sig, bandZone, weeklyTrend, hvp, rr, concordanceScore);
 
   // LAYER 1: Context WR bonus (self-learning, 0-10)
   const ctx = contextWRMap[buildCtxKey(sig, regime||'flat', getBkt(breadthPct||50,40,60), getBkt(hvp||50,30,60))];
@@ -1270,9 +1362,12 @@ async function processAll(bySymbol) {
     const n=closes.length-1;
     if(h9[n]===null||h10[n]===null)continue;
 
-    // Band zones
-    const bd=calcBands(closes);
-    const bandZone=bd?bd.bandZone:'va';
+    // Multi-lookback band zones
+    const allBands = calcAllBands(closes);
+    const bd60 = allBands[60] || allBands[30] || allBands[100];
+    const bandZone = bd60 ? bd60.zone : 'va';
+    const concord = zoneConcordance(allBands);
+    const concordanceScore = concord.score;
 
     // Signal
     const signal=detectSALT(h9,h10,smi,smiSig,bandZone);
@@ -1287,15 +1382,15 @@ async function processAll(bySymbol) {
 
     // TP/SL
     const cmp=closes[n], atr=atrs[n]||cmp*0.02;
-    let tp,sl,tpSlSource='ATR';
+    let tp,sl,tpSlSource='PCT';
     const learned=getLearnedTPSL(sym,cmp,atr);
     if(learned){tp=learned.tp;sl=learned.sl;tpSlSource=learned.source}
     else if(signal.startsWith('B')){
-      tp=parseFloat((cmp+atr*ATR_TP_DEF).toFixed(2));
-      sl=parseFloat((cmp-atr*ATR_SL_DEF).toFixed(2));
+      tp=parseFloat((cmp*(1+PCT_TP)).toFixed(2));
+      sl=parseFloat((cmp*(1-PCT_SL)).toFixed(2));
     } else {
-      tp=parseFloat((cmp-atr*ATR_TP_DEF).toFixed(2));
-      sl=parseFloat((cmp+atr*ATR_SL_DEF).toFixed(2));
+      tp=parseFloat((cmp*(1-PCT_TP)).toFixed(2));
+      sl=parseFloat((cmp*(1+PCT_SL)).toFixed(2));
     }
     const rr=atr>0?parseFloat((Math.abs(tp-cmp)/Math.abs(cmp-sl)).toFixed(2)):1;
 
@@ -1308,7 +1403,7 @@ async function processAll(bySymbol) {
 
     // Score
     const ret250=stockReturns[sym]?stockReturns[sym].ret_250:null;
-    const score=adaptiveScore(signal,prevSig,mktRegime,secBrd.pct,hvp,rr,weeklyTrend,rows[n].date,sym,globalBestInd,bandZone,ret250);
+    const score=adaptiveScore(signal,prevSig,mktRegime,secBrd.pct,hvp,rr,weeklyTrend,rows[n].date,sym,globalBestInd,bandZone,ret250,concordanceScore);
 
     // NSEI corr
     const nseiCorr=corrData[sym]?corrData[sym]['NSEI']||corrData[sym]['CRSLDX']||null:null;
@@ -1331,7 +1426,15 @@ async function processAll(bySymbol) {
 
     const sigObj={
       symbol:sym,sector:info.sector,index:info.index,
-      signal,score,band_zone:bandZone,hvp,
+      signal,score,band_zone:bandZone,
+      band_30:allBands[30]?allBands[30].zone:null,
+      band_60:allBands[60]?allBands[60].zone:null,
+      band_100:allBands[100]?allBands[100].zone:null,
+      band_250:allBands[250]?allBands[250].zone:null,
+      concordance:concord.agreement,concordance_score:concordanceScore,
+      wr_lookup:WR_LOOKUP[signal+'|'+bandZone]||null,
+      breakeven_wr:BREAKEVEN_WR,
+      is_good_combo:(signal.startsWith('B')?GOOD_BUY:GOOD_SELL)[signal+'|'+bandZone]||false,hvp,
       regime:mktRegime,breadth_pct:secBrd.pct,
       market_breadth:mktBreadthPct,
       cmp,tp,sl,rr,atr_entry:parseFloat(atr.toFixed(2)),
@@ -1707,11 +1810,33 @@ function createDailyPortfolios() {
   const buys=allSignals.filter(s=>s.signal.startsWith('B')&&s.score>=minScore).sort((a,b)=>top25Sort(a,b,'score'));
   const sells=allSignals.filter(s=>s.signal.startsWith('S')&&s.score>=minScore).sort((a,b)=>top25Sort(a,b,'score'));
 
-  // ── Sector diversification: max 3 stocks per sector ──
+  // ── Zone quality filter + sector diversification ──
+  // Data shows: below_va and va are the only profitable zones for buys
+  // rej_lo appears oversold but has 51-57% WR — negative EV
+  function zoneQuality(s) {
+    const isBuy=s.signal.startsWith('B');
+    if(isBuy) {
+      if(s.band_60==='below_va') return 3;  // best
+      if(s.band_60==='va')       return 2;  // good
+      if(s.band_60==='rej_lo')   return 1;  // risky — only if score very high
+      return 0;
+    } else {
+      if(s.band_60==='rej_hi')   return 3;
+      if(s.band_60==='above_va') return 2;
+      if(s.band_60==='va')       return 2;
+      return 1;
+    }
+  }
   function diversify(list, maxPerSector, maxTotal) {
+    // Sort: zone quality first, then score
+    const sorted=list.slice().sort((a,b)=>{
+      const zq=zoneQuality(b)-zoneQuality(a);
+      if(zq!==0) return zq;
+      return b.score-a.score;
+    });
     const sectorCt={};
     const result=[];
-    for(const s of list){
+    for(const s of sorted){
       const sc=s.sector||'Other';
       if(!sectorCt[sc])sectorCt[sc]=0;
       if(sectorCt[sc]>=maxPerSector) continue;
@@ -2064,8 +2189,16 @@ function top25Sort(a, b, col) {
 
 function renderTop25() {
   const thr = getRegimeThreshold();
-  const buys=allSignals.filter(s=>s.signal.startsWith('B')).sort((a,b)=>top25Sort(a,b,top25SortBuy)).slice(0,25);
-  const sells=allSignals.filter(s=>s.signal.startsWith('S')).sort((a,b)=>top25Sort(a,b,top25SortSell)).slice(0,25);
+  // Good combos first, then rest — always show 25 regardless
+  function sortWithGood(arr, col) {
+    return arr.sort(function(a,b){
+      if(a.is_good_combo && !b.is_good_combo) return -1;
+      if(!a.is_good_combo && b.is_good_combo) return 1;
+      return top25Sort(a,b,col);
+    });
+  }
+  const buys=sortWithGood(allSignals.filter(s=>s.signal.startsWith('B')),top25SortBuy).slice(0,25);
+  const sells=sortWithGood(allSignals.filter(s=>s.signal.startsWith('S')),top25SortSell).slice(0,25);
 
   // Update header threshold hint
   ['Buy','Sell'].forEach(t=>{
@@ -2077,27 +2210,29 @@ function renderTop25() {
     }
   });
   const row=(s,i)=>{
-    const kStr=s.kelly_pct!==null?`${s.kelly_pct}%`:'—';
-    const wrStr=s.learnedWR?`${s.learnedWR}%`:'—';
-    const sqStr=s.seqWR!==null?`${s.seqWR}%`:'—';
-    const retStr=s.ret_250!==null?`${s.ret_250>0?'+':''}${s.ret_250}%`:'—';
-    const bz=bandZoneBadge(s.band_zone);
+    const kStr=s.kelly_pct!==null?s.kelly_pct+'%':'—';
+    const goodFlag=s.is_good_combo?'<span class="b b-bull" style="font-size:7px">EV+</span> ':'';
+    const retStr=s.ret_250!==null?(s.ret_250>0?'+':'')+s.ret_250+'%':'—';
+    const bz=bandZoneBadge(s.band_60||s.band_zone);
     const scoreCls=s.score>=thr?'c-bull':s.score>=(thr-15)?'c-amb':'c-dim';
     const idealFlag=s.score>=thr?'★ ':'';
+    const histWR=s.wr_lookup!==null&&s.wr_lookup!==undefined?s.wr_lookup+'%':'—';
+    const wrCls=s.wr_lookup>=75?'c-bull':s.wr_lookup>=68?'c-amb':'c-bear';
+    const concBadge2=concordBadge(s.concordance);
     return`<tr class="${sigClass(s.signal)}">
       <td class="c-dim">${idealFlag}${i+1}</td>
-      <td><strong>${s.symbol}</strong></td>
+      <td>${goodFlag}<strong>${s.symbol}</strong></td>
       <td>${sigBadge(s.signal)}</td>
       <td><strong class="${scoreCls}">${s.score}</strong></td>
+      <td>${concBadge2}</td>
       <td>${bz}</td>
       <td><span class="${s.hvp>60?'c-bull':s.hvp<35?'c-bear':'c-amb'}">${s.hvp}</span></td>
       <td>₹${s.cmp.toFixed(1)}</td>
       <td class="c-bull">₹${s.tp.toFixed(1)}</td>
       <td class="c-bear">₹${s.sl.toFixed(1)}</td>
       <td class="${s.rr>=2?'c-bull':s.rr>=1?'c-amb':'c-bear'}">${s.rr}</td>
+      <td class="${wrCls}">${histWR}</td>
       <td class="c-teal">${kStr}</td>
-      <td>${wrStr}</td>
-      <td class="c-kite">${sqStr}</td>
       <td class="${s.ret_250>0?'c-bull':'c-bear'}">${retStr}</td>
     </tr>`;
   };
@@ -2106,6 +2241,9 @@ function renderTop25() {
 }
 function sortTop25(type,col){if(type==='buy')top25SortBuy=col;else top25SortSell=col;renderTop25()}
 
+function getTPSLNote() {
+  return 'TP=2.0% SL=3.5% | Best: B2/B3 in below_va zone (74% WR)';
+}
 function renderInsights() {
   const el=document.getElementById('insightStrip');
   const buys=allSignals.filter(s=>s.signal.startsWith('B'));
@@ -2115,6 +2253,7 @@ function renderInsights() {
   const regime=mb.length?mb[0].regime:'flat';
   const ins=[];
   ins.push(`<div class="insight ${regime==='bull'?'bull':regime==='bear'?'bear':''}"><strong>Market</strong> ${mktBreadthText(mkt)} · Regime: ${regime.toUpperCase()}</div>`);
+  ins.push(`<div class="insight"><strong>TP/SL</strong> TP=2.0% · SL=3.5% · RR 1:1.75 · Best zone: below_va (74% WR) · Breakeven: 63.6%</div>`);
   if(buys.length) ins.push(`<div class="insight bull"><strong>${buys.length} BUY signals</strong> · Top: ${buys.sort((a,b)=>b.score-a.score).slice(0,3).map(s=>s.symbol).join(', ')}</div>`);
   if(sells.length) ins.push(`<div class="insight bear"><strong>${sells.length} SELL signals</strong> · Top: ${sells.sort((a,b)=>b.score-a.score).slice(0,3).map(s=>s.symbol).join(', ')}</div>`);
   if(cascadeCurrent.length) ins.push(`<div class="insight purple"><strong>Cascade Alert:</strong> ${cascadeCurrent[0].opportunity}</div>`);
@@ -2149,14 +2288,21 @@ function applyFilters() {
   });
   const tbody=document.getElementById('sigBody');
   if(!tbody)return;
+  const thr2=getRegimeThreshold();
   tbody.innerHTML=sigFiltered.slice(0,500).map(s=>{
     const earn=s.earn_prox?'<span class="b b-pink">⚡EARN</span>':'';
+    const concBadge=concordBadge(s.concordance);
+    const scoreCls2=s.score>=thr2?'c-bull':s.score>=(thr2-15)?'c-amb':'c-dim';
     return`<tr class="${sigClass(s.signal)}${s.earn_prox?' earn':''}">
       <td><strong>${s.symbol}</strong></td>
-      <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.sector}</td>
+      <td style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.sector}</td>
       <td>${sigBadge(s.signal)}</td>
-      <td><strong class="${s.score>=70?'c-bull':s.score>=50?'c-amb':'c-dim'}">${s.score}</strong></td>
-      <td>${bandZoneBadge(s.band_zone)}</td>
+      <td><strong class="${scoreCls2}">${s.score}</strong></td>
+      <td>${concBadge}</td>
+      <td style="font-size:8px">${bandZoneBadge(s.band_30)}</td>
+      <td style="font-size:8px">${bandZoneBadge(s.band_60)}</td>
+      <td style="font-size:8px">${bandZoneBadge(s.band_100)}</td>
+      <td style="font-size:8px">${bandZoneBadge(s.band_250)}</td>
       <td><span class="${s.hvp>60?'c-bull':s.hvp<35?'c-bear':'c-amb'}">${s.hvp}</span></td>
       <td>₹${s.cmp.toFixed(1)}</td>
       <td class="c-bull">₹${s.tp.toFixed(1)}</td>
@@ -2164,12 +2310,10 @@ function applyFilters() {
       <td class="${s.rr>=2?'c-bull':s.rr>=1?'c-amb':'c-bear'}">${s.rr}</td>
       <td class="c-teal">${s.kelly_pct!==null?s.kelly_pct+'%':'—'}</td>
       <td>${s.learnedWR?s.learnedWR+'%':'—'}</td>
-      <td class="c-kite">${s.seqWR!==null?s.seqWR+'%':'—'}</td>
       <td class="${s.mb_score>60?'c-amb':'c-dim'}">${s.mb_score||0}</td>
-      <td class="${corrColor(s.nsei_corr)}">${s.nsei_corr!==null?s.nsei_corr:'—'}</td>
       <td>${earn}</td>
     </tr>`;
-  }).join('')||(sigFiltered.length===0?'<tr><td colspan="16" class="empty">No signals match filters</td></tr>':'');
+  }).join('')||(sigFiltered.length===0?'<tr><td colspan="18" class="empty">No signals match filters</td></tr>':'');
 }
 function sortSig(col){if(sigSortCol===col)sigSortDir*=-1;else{sigSortCol=col;sigSortDir=-1}renderSigTable()}
 function clearFilters(){['fSig','fSec','fIdx','fBand'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});const fs=document.getElementById('fSearch');if(fs)fs.value='';renderSigTable()}
@@ -2658,6 +2802,19 @@ function bandZoneBadge(z){
   const map={'rej_lo':'<span class="b b-bull">REJ Lo</span>','below_va':'<span class="b b-teal">Below VA</span>','va':'<span class="b b-dim">VA</span>','above_va':'<span class="b b-amb">Above VA</span>','rej_hi':'<span class="b b-bear">REJ Hi</span>'};
   return map[z]||`<span class="b b-dim">${z||'—'}</span>`;
 }
+function concordBadge(agreement) {
+  const map = {
+    'strong_buy':  '<span class="b b-bull">ALL BUY</span>',
+    'buy':         '<span class="b b-bull">3+ BUY</span>',
+    'lean_buy':    '<span class="b b-teal">2 BUY</span>',
+    'strong_sell': '<span class="b b-bear">ALL SELL</span>',
+    'sell':        '<span class="b b-bear">3+ SELL</span>',
+    'lean_sell':   '<span class="b b-pink">2 SELL</span>',
+    'neutral':     '<span class="b b-dim">NEUTRAL</span>',
+    'conflict':    '<span class="b b-amb">CONFLICT</span>',
+  };
+  return map[agreement]||'<span class="b b-dim">—</span>';
+}
 function corrColor(c){return c===null?'c-dim':c>0.6?'c-bull':c>0.3?'c-amb':c<-0.2?'c-bear':'c-dim'}
 
 function updatePills() {
@@ -2692,7 +2849,7 @@ function switchIntel(name){
 }
 function renderIntelActive(){const active=document.querySelector('.i-panel.active');if(active)renderIntelTab(active.id.replace('intel-',''))}
 function renderIntelTab(name){
-  const map={m6:renderM6,m1:renderM1,m4:renderM4,m2:renderM2,m3:renderM3,m5:renderM5,m7:renderM7,tpsl:renderTPSL,mb:renderMB,sectors:renderSectors,ledger:renderLedger,retcorr:renderRetCorr};
+  const map={m6:renderM6,m1:renderM1,m4:renderM4,m2:renderM2,m3:renderM3,m5:renderM5,m7:renderM7,tpsl:renderTPSL,mb:renderMB,sectors:renderSectors,ledger:renderLedger,retcorr:renderRetCorr,wrref:function(){}};
   if(map[name])map[name]();
 }
 
