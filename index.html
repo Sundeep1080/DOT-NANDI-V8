@@ -560,7 +560,7 @@ const HMA_FAST = 9, HMA_SLOW = 10;
 const SMI_K = 10, SMI_D = 3, SMI_SM = 3;
 const SMI_BULL = 40, SMI_BEAR = -40;
 const ATR_TP_DEF = 2.5, ATR_SL_DEF = 1.5;
-const BAND_LB = 60;
+const BAND_LB = 30;
 
 const PRIOR_WR = {'B1-OS':68,'B1-MOM':60,'B2':65,'B3':48,'S1-OB':67,'S1-MOM':59,'S2':64,'S3':47};
 const PRIOR_BASE = {'B1-OS':50,'B1-MOM':38,'B2':44,'B3':18,'S1-OB':50,'S1-MOM':38,'S2':44,'S3':18};
@@ -769,28 +769,56 @@ function calcBands(closes, lookback=BAND_LB) {
 // SALT SIGNAL DETECTION (from IRAVAT v9 — band zone aware)
 // ═══════════════════════════════════════════════════════════
 function detectSALT(h9arr, h10arr, smiArr, smiSigArr, bandZone) {
-  const v9=[], vi=[];
-  for(let i=h9arr.length-1;i>=0&&v9.length<3;i--){
-    if(h9arr[i]!==null&&!isNaN(h9arr[i])){v9.unshift(h9arr[i]);vi.unshift(i)}
+  const n = h9arr.length;
+  if(n < 15) return 'WAIT';
+
+  // Scan last 5 bars — return the strongest signal in window
+  // Priority: B1-OS > B2 > B1-MOM > B3 > S1-OB > S2 > S1-MOM > S3
+  const SIG_PRI = {'B1-OS':8,'B2':7,'B1-MOM':6,'B3':5,'S1-OB':4,'S2':3,'S1-MOM':2,'S3':1,'WAIT':0};
+  let bestSig = 'WAIT';
+
+  for(let offset = 0; offset < 5; offset++) {
+    const evalIdx = n - 1 - offset;
+    if(evalIdx < 12) break;
+
+    // Collect last 3 valid HMA9 values ending at evalIdx
+    const v9=[], vi=[];
+    for(let i=evalIdx; i>=0&&v9.length<3; i--){
+      if(h9arr[i]!==null&&!isNaN(h9arr[i])){v9.unshift(h9arr[i]);vi.unshift(i)}
+    }
+    if(v9.length<3) continue;
+    const[pp9,p9,c9]=v9, [ppI,pI,cI]=vi;
+    const p10=h10arr[pI], c10=h10arr[cI];
+    if(p10===null||c10===null) continue;
+    const cSMI=smiArr[cI]||0, cSIG=smiSigArr[cI]||0;
+    const d9=c9-p9, pd9=p9-pp9, d10=c10-p10;
+
+    // 3-bar crossover window: check if crossover happened within last 3 bars of evalIdx
+    let xUp=false, xDn=false;
+    for(let k=0; k<3&&evalIdx-k>=1; k++){
+      const ci=evalIdx-k, pi=evalIdx-k-1;
+      if(h9arr[ci]!==null&&h10arr[ci]!==null&&h9arr[pi]!==null&&h10arr[pi]!==null){
+        if(h9arr[ci]>h10arr[ci]&&h9arr[pi]<=h10arr[pi]) xUp=true;
+        if(h9arr[ci]<h10arr[ci]&&h9arr[pi]>=h10arr[pi]) xDn=true;
+      }
+    }
+
+    const isBuy  = bandZone==='rej_lo'||bandZone==='below_va';
+    const isSell = bandZone==='rej_hi'||bandZone==='above_va';
+
+    let sig='WAIT';
+    if(d9>0&&pd9<0&&cSMI<-20&&cSIG<-20&&isBuy)         sig='B1-OS';
+    else if(d9>0&&pd9<0&&cSMI>25&&cSIG>25&&isBuy)       sig='B1-MOM';
+    else if(xUp&&d10>0&&cSMI<-20&&cSIG<-20&&!isSell)    sig='B2';
+    else if(d9>0&&d10>0&&cSMI>-10&&cSIG>-10&&!isSell)   sig='B3';
+    else if(d9<0&&pd9>0&&cSMI>20&&cSIG>20&&isSell)      sig='S1-OB';
+    else if(d9<0&&pd9>0&&cSMI<-25&&cSIG<-25&&isSell)    sig='S1-MOM';
+    else if(xDn&&d10<0&&cSMI>20&&cSIG>20&&!isBuy)       sig='S2';
+    else if(d9<0&&d10<0&&cSMI<10&&cSIG<10&&!isBuy)      sig='S3';
+
+    if((SIG_PRI[sig]||0) > (SIG_PRI[bestSig]||0)) bestSig=sig;
   }
-  if(v9.length<3)return'WAIT';
-  const[pp9,p9,c9]=v9, [ppI,pI,cI]=vi;
-  const p10=h10arr[pI], c10=h10arr[cI];
-  if(p10===null||c10===null)return'WAIT';
-  const cSMI=smiArr[cI]||0, cSIG=smiSigArr[cI]||0;
-  const d9=c9-p9, pd9=p9-pp9, d10=c10-p10;
-  const xUp=c9>c10&&p9<=p10, xDn=c9<c10&&p9>=p10;
-  const isBuy=bandZone==='rej_lo'||bandZone==='below_va';
-  const isSell=bandZone==='rej_hi'||bandZone==='above_va';
-  if(d9>0&&pd9<0&&cSMI<-20&&cSIG<-20&&isBuy) return'B1-OS';
-  if(d9>0&&pd9<0&&cSMI>25&&cSIG>25&&isBuy)   return'B1-MOM';
-  if(xUp&&d10>0&&cSMI<-20&&cSIG<-20&&!isSell) return'B2';
-  if(d9>0&&d10>0&&cSMI>-10&&cSIG>-10&&!isSell)return'B3';
-  if(d9<0&&pd9>0&&cSMI>20&&cSIG>20&&isSell)  return'S1-OB';
-  if(d9<0&&pd9>0&&cSMI<-25&&cSIG<-25&&isSell)return'S1-MOM';
-  if(xDn&&d10<0&&cSMI>20&&cSIG>20&&!isBuy)   return'S2';
-  if(d9<0&&d10<0&&cSMI<10&&cSIG<10&&!isBuy)  return'S3';
-  return'WAIT';
+  return bestSig;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1664,50 +1692,98 @@ function getDayInfo(dateStr) {
 function createDailyPortfolios() {
   if(!allSignals.length){toast('Load data first','err');return}
   const capital=parseFloat(document.getElementById('pfCapital').value)||500000;
-  const minScore=parseInt(document.getElementById('pfMinScore').value)||45;
+  // Always enforce regime minimum — user's manual input is floor, regime is ceiling minimum
+  const userMin=parseInt(document.getElementById('pfMinScore').value)||55;
+  const regimeMin=getRegimeThreshold();
+  const minScore=Math.max(userMin, regimeMin);
   const latestDate=allSignals.reduce((m,s)=>s.entry_date>m?s.entry_date:m,'');
   if(!latestDate)return;
   const dayInfo=getDayInfo(latestDate);
   // Check duplicate
   const existing=dailyPortfolios.find(p=>p.createdDate===dayInfo.createdDate&&p.status==='active');
-  if(existing){toast(`Portfolio for ${dayInfo.dayName} ${dayInfo.createdDate} already exists`,'info');renderPage2();return}
+  if(existing){toast('Portfolio for '+dayInfo.dayName+' '+dayInfo.createdDate+' already exists','info');renderPage2();return}
+
+  // Filter + sort by score
   const buys=allSignals.filter(s=>s.signal.startsWith('B')&&s.score>=minScore).sort((a,b)=>top25Sort(a,b,'score'));
   const sells=allSignals.filter(s=>s.signal.startsWith('S')&&s.score>=minScore).sort((a,b)=>top25Sort(a,b,'score'));
-  const max25=25;
-  const buyList=buys.slice(0,max25), sellList=sells.slice(0,max25);
-  if(buyList.length===0&&sellList.length===0){toast(`No signals above score ${minScore}. Lower threshold.`,'err');return}
-  if(buyList.length>=3){
-    const stocks=buyList.map(s=>{
-      const pos=Math.round(capital/buyList.length);
-      return{symbol:s.symbol,sector:s.sector,signal:s.signal,score:s.score,
-        cmp:s.cmp,tp:s.tp,sl:s.sl,rr:s.rr,kelly_pct:s.kelly_pct,
-        position_size:pos,qty:Math.floor(pos/s.cmp)||1,
-        current_price:s.cmp,pnl_pct:0,pnl_amt:0,status:'open'};
+
+  // ── Sector diversification: max 3 stocks per sector ──
+  function diversify(list, maxPerSector, maxTotal) {
+    const sectorCt={};
+    const result=[];
+    for(const s of list){
+      const sc=s.sector||'Other';
+      if(!sectorCt[sc])sectorCt[sc]=0;
+      if(sectorCt[sc]>=maxPerSector) continue;
+      sectorCt[sc]++;
+      result.push(s);
+      if(result.length>=maxTotal) break;
+    }
+    return result;
+  }
+  const buyList=diversify(buys, 3, 25);
+  const sellList=diversify(sells, 3, 25);
+
+  if(buyList.length===0&&sellList.length===0){
+    toast('No signals above score '+minScore+' (regime: '+overallRegime+'). Lower threshold or wait for better setups.','err');
+    return;
+  }
+
+  // ── Kelly-adjusted position sizing ──
+  function kellySize(stocks, totalCapital) {
+    // Check if Kelly data available
+    const hasKelly = stocks.some(s=>s.kelly_pct!==null&&s.kelly_pct>0);
+    if(!hasKelly) {
+      // Equal weight fallback
+      return stocks.map(s=>({...s, position_size:Math.round(totalCapital/stocks.length)}));
+    }
+    // Kelly weights: use kelly_pct as weight, normalise to sum to capital
+    const kellys=stocks.map(s=>s.kelly_pct||5); // default 5% if no Kelly
+    const totalK=kellys.reduce((a,b)=>a+b,0);
+    return stocks.map((s,i)=>{
+      const weight=kellys[i]/totalK;
+      const pos=Math.round(totalCapital*weight);
+      return Object.assign({},s,{position_size:pos});
     });
+  }
+
+  if(buyList.length>=3){
+    const sizedStocks=kellySize(buyList.map(s=>({
+      symbol:s.symbol,sector:s.sector,signal:s.signal,score:s.score,
+      cmp:s.cmp,tp:s.tp,sl:s.sl,rr:s.rr,kelly_pct:s.kelly_pct,
+      band_zone:s.band_zone,hvp:s.hvp,
+      current_price:s.cmp,pnl_pct:0,pnl_amt:0,status:'open'
+    })), capital);
+    const stocks=sizedStocks.map(s=>Object.assign({},s,{qty:Math.max(1,Math.floor(s.position_size/s.cmp))}));
+    const avgScore=Math.round(buyList.reduce((acc,x)=>acc+x.score,0)/buyList.length);
+    const sectors=[...new Set(stocks.map(s=>s.sector))];
     dailyPortfolios.push({
       id:'BUY_'+dayInfo.createdDate,type:'buy',day:dayInfo.dayName,
       createdDate:dayInfo.createdDate,dissolveDate:dayInfo.dissolveDate,dissolveDay:dayInfo.dissolveDay,
       status:'active',capital,stocks,totalPnl:0,totalPnlPct:0,winCount:0,lossCount:0,
-      avgScore:Math.round(buyList.reduce((s,x)=>s+x.score,0)/buyList.length)
+      avgScore,sectors,minScoreUsed:minScore,regimeAtCreation:overallRegime
     });
-    toast(`BUY portfolio: ${buyList.length} stocks · ${dayInfo.dayName} → dissolves ${dayInfo.dissolveDay}`,'ok');
+    toast('BUY: '+buyList.length+' stocks across '+sectors.length+' sectors · '+dayInfo.dayName+' → dissolves '+dayInfo.dissolveDay,'ok');
   }
+
   if(sellList.length>=3){
-    const stocks=sellList.map(s=>{
-      const pos=Math.round(capital/sellList.length);
-      return{symbol:s.symbol,sector:s.sector,signal:s.signal,score:s.score,
-        cmp:s.cmp,tp:s.tp,sl:s.sl,rr:s.rr,kelly_pct:s.kelly_pct,
-        position_size:pos,qty:Math.floor(pos/s.cmp)||1,
-        current_price:s.cmp,pnl_pct:0,pnl_amt:0,status:'open',
-        spread_type:s.signal==='S1-MOM'||s.signal==='S3'?'bear_put':'bear_call'};
-    });
+    const sizedStocks=kellySize(sellList.map(s=>({
+      symbol:s.symbol,sector:s.sector,signal:s.signal,score:s.score,
+      cmp:s.cmp,tp:s.tp,sl:s.sl,rr:s.rr,kelly_pct:s.kelly_pct,
+      band_zone:s.band_zone,hvp:s.hvp,
+      current_price:s.cmp,pnl_pct:0,pnl_amt:0,status:'open',
+      spread_type:s.signal==='S1-MOM'||s.signal==='S3'?'bear_put':'bear_call'
+    })), capital);
+    const stocks=sizedStocks.map(s=>Object.assign({},s,{qty:Math.max(1,Math.floor(s.position_size/s.cmp))}));
+    const avgScore=Math.round(sellList.reduce((acc,x)=>acc+x.score,0)/sellList.length);
+    const sectors=[...new Set(stocks.map(s=>s.sector))];
     dailyPortfolios.push({
       id:'SELL_'+dayInfo.createdDate,type:'sell',day:dayInfo.dayName,
       createdDate:dayInfo.createdDate,dissolveDate:dayInfo.dissolveDate,dissolveDay:dayInfo.dissolveDay,
       status:'active',capital,stocks,totalPnl:0,totalPnlPct:0,winCount:0,lossCount:0,
-      avgScore:Math.round(sellList.reduce((s,x)=>s+x.score,0)/sellList.length)
+      avgScore,sectors,minScoreUsed:minScore,regimeAtCreation:overallRegime
     });
-    toast(`SELL portfolio: ${sellList.length} stocks → spreads in Options tab`,'ok');
+    toast('SELL: '+sellList.length+' stocks across '+sectors.length+' sectors → see Options tab','ok');
   }
   pfSave();renderPage2();updatePills();
 }
@@ -2146,8 +2222,8 @@ function renderPFCards() {
     return`<div class="pf-card ${pfClass}">
       <div class="pf-hdr">
         <div>
-          <div class="pf-title ${pf.type==='buy'?'c-bull':'c-bear'}">${pf.type.toUpperCase()} Portfolio · ${pf.dayName}</div>
-          <div class="pf-meta">${pf.stocks.length} stocks · Created ${pf.createdDate} · Dissolves ${pf.dissolveDay} ${pf.dissolveDate}</div>
+          <div class="pf-title ${pf.type==='buy'?'c-bull':'c-bear'}">${pf.type.toUpperCase()} Portfolio · ${pf.day}</div>
+          <div class="pf-meta">${pf.stocks.length} stocks · ${pf.sectors?pf.sectors.length+' sectors · ':''} Score≥${pf.minScoreUsed||'—'} · ${pf.regimeAtCreation?pf.regimeAtCreation.toUpperCase()+' regime · ':''} Dissolves ${pf.dissolveDay} ${pf.dissolveDate}</div>
         </div>
         <div style="text-align:right">
           <div class="pf-stat"><label>P&L</label><span class="${pnlClass}">${pf.totalPnlPct>=0?'+':''}${pf.totalPnlPct}%</span></div>
