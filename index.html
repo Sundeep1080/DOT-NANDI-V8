@@ -326,7 +326,7 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
           <button class="btn btn-d" style="font-size:8px;padding:2px 7px" onclick="sortTop25('buy','rr')">R:R</button>
         </div>
       </div>
-      <div class="tw"><table id="top25BuyTbl"><thead><tr><th>#</th><th>Symbol</th><th>Sig</th><th>Score</th><th>Concord</th><th>60d Zone</th><th>HVP</th><th>CMP</th><th>TP +2.0%</th><th>SL -3.5%</th><th>R:R</th><th>HistWR%</th><th>Kelly%</th><th>250d</th></tr></thead><tbody id="top25BuyBody"></tbody></table></div>
+      <div class="tw"><table id="top25BuyTbl"><thead><tr><th>#</th><th>Symbol</th><th>Sig</th><th>Score</th><th>Concord</th><th>100d Zone</th><th>HVP</th><th>CMP</th><th>TP +2.0%</th><th>SL -3.5%</th><th>R:R</th><th>HistWR%</th><th>Kelly%</th><th>250d</th></tr></thead><tbody id="top25BuyBody"></tbody></table></div>
     </div>
     <div class="top25-panel">
       <div class="top25-hdr bear">
@@ -337,7 +337,7 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
           <button class="btn btn-d" style="font-size:8px;padding:2px 7px" onclick="sortTop25('sell','rr')">R:R</button>
         </div>
       </div>
-      <div class="tw"><table id="top25SellTbl"><thead><tr><th>#</th><th>Symbol</th><th>Sig</th><th>Score</th><th>Concord</th><th>60d Zone</th><th>HVP</th><th>CMP</th><th>TP +2.0%</th><th>SL -3.5%</th><th>R:R</th><th>HistWR%</th><th>Kelly%</th><th>250d</th></tr></thead><tbody id="top25SellBody"></tbody></table></div>
+      <div class="tw"><table id="top25SellTbl"><thead><tr><th>#</th><th>Symbol</th><th>Sig</th><th>Score</th><th>Concord</th><th>100d Zone</th><th>HVP</th><th>CMP</th><th>TP +2.0%</th><th>SL -3.5%</th><th>R:R</th><th>HistWR%</th><th>Kelly%</th><th>250d</th></tr></thead><tbody id="top25SellBody"></tbody></table></div>
     </div>
   </div>
   <div class="insights-strip" id="insightStrip" style="display:none"></div>
@@ -361,7 +361,7 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
         <th onclick="sortSig('concordance')">Concordance</th>
         <th onclick="sortSig('band_30')">30d</th>
         <th onclick="sortSig('band_60')">60d</th>
-        <th onclick="sortSig('band_100')">100d</th>
+        <th onclick="sortSig('band_100')" style="font-weight:900;color:var(--amber)">100d★</th>
         <th onclick="sortSig('band_250')">250d</th>
         <th onclick="sortSig('hvp')">HVP</th>
         <th onclick="sortSig('cmp')">CMP</th>
@@ -532,14 +532,14 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
 
   <!-- WR REFERENCE -->
   <div class="i-panel card" id="intel-wrref" style="border-radius:0 0 var(--r-lg) var(--r-lg)">
-    <div class="ct amber"><i class="fas fa-table"></i> Win Rate Reference — TP=1.25% SL=3.75% &amp; TP=2.5% SL=3.75%</div>
+    <div class="ct amber"><i class="fas fa-table"></i> Win Rate Reference — TP=2.0% SL=3.5% (RR 1:1.75, Breakeven WR=63.6%)</div>
     <div style="font-family:var(--mono);font-size:8px;color:var(--bear);margin-bottom:8px;padding:6px 8px;background:var(--bear-g);border-radius:4px">
-      KEY FINDING: rej_lo is a TRAP for buy signals (51% WR). below_va is the sweet spot (74% WR). Use TP=2% SL=3.5%. → RR 1:3 → needs WR &gt;75% to profit. Only 2 combinations qualify (B3/below_va, B2/below_va).
-      Recommendation: use TP=2.5% SL=3.75% → RR 1:1.5 → profitable at WR &gt;60%.
+      Primary lookback: 100d (quarterly range). Scan window: 10 bars. TP=2.0% SL=3.5% → RR 1:1.75 → profitable at WR &gt;63.6%.
+      KEY: rej_lo is a TRAP for BUY (WR=51%). below_va &amp; va are the real money zones (WR=66-74%).
     </div>
     <div class="grid2">
       <div>
-        <div style="font-family:var(--mono);font-size:8px;color:var(--text2);margin-bottom:6px">BY SIGNAL (TP=1.25% SL=3.75%)</div>
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text2);margin-bottom:6px">BY SIGNAL (TP=2.0% SL=3.5%, primary=100d, scan=10bars)</div>
         <div class="tw"><table><thead><tr><th>Signal</th><th>WR%</th><th>EV/trade</th><th>AvgWin</th><th>Grade</th></tr></thead>
         <tbody>
           <tr><td>B2×below_va</td><td class="c-bull">74%</td><td class="c-bull">+0.55%</td><td>2.0d</td><td><span class="b b-bull">★ BEST BUY</span></td></tr>
@@ -563,7 +563,7 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
           <tr><td><span class="b b-amb">above_va</span></td><td class="c-amb">~55%</td><td class="c-bear">-0.70%</td><td><span class="b b-dim">SELL only</span></td></tr>
           <tr><td><span class="b b-bull">rej_hi</span></td><td class="c-bear">~47%</td><td class="c-bear">-1.07%</td><td><span class="b b-bear">Worst for sells too</span></td></tr>
         </tbody></table></div>
-        <div style="margin-top:10px;font-family:var(--mono);font-size:8px;color:var(--text2);margin-bottom:6px">BEST COMBINATIONS (TP=1.25% SL=3.75%)</div>
+        <div style="margin-top:10px;font-family:var(--mono);font-size:8px;color:var(--text2);margin-bottom:6px">BEST COMBINATIONS (TP=2.0% SL=3.5%)</div>
         <div class="tw"><table><thead><tr><th>Signal × Zone</th><th>WR%</th><th>EV</th></tr></thead>
         <tbody>
           <tr><td>B2 × below_va</td><td class="c-bull">74%</td><td class="c-bull">+0.55%</td></tr>
@@ -672,44 +672,62 @@ function wma(arr, endI, p) {
   return d>0?n/d:arr[endI];
 }
 function calcHMA(prices, period) {
+  // Exact TradingView ta.hma() formula:
+  // hma = ta.wma(2*ta.wma(src, floor(len/2)) - ta.wma(src, len), floor(sqrt(len)))
   const n=prices.length, half=Math.floor(period/2), sq=Math.floor(Math.sqrt(period));
   const res=new Array(n).fill(null);
   const diff=new Array(n).fill(null);
-  for (let i=period-1;i<n;i++){
-    const wf=wma(prices,i,period);
-    const pi=Math.max(0,i-Math.floor(period/2));
-    const wh=wma(prices,pi,half);
+  for(let i=period-1;i<n;i++){
+    const wf=wma(prices,i,period);   // ta.wma(src, len)
+    const wh=wma(prices,i,half);     // ta.wma(src, floor(len/2)) ← SAME end index i
     diff[i]=2*wh-wf;
   }
-  for (let i=period+sq-2;i<n;i++){
+  for(let i=period+sq-2;i<n;i++){
     if(diff[i]!==null) res[i]=wma(diff,i,sq);
   }
   return res;
 }
-function calcSMI(highs, lows, closes, kLen=SMI_K, d=SMI_D, sm=SMI_SM) {
-  const n=closes.length, smi=new Array(n).fill(null), sig=new Array(n).fill(null);
-  function ema2(arr,len,startI){
-    const r=arr.slice(); let f=startI;
-    while(f<r.length&&r[f]===null)f++;
-    if(f>=r.length)return r;
+function calcSMI(highs, lows, closes, kLen, d, sm) {
+  // Exact match to SALT Pine Script SMI calculation:
+  // hl = highest(high,len) - lowest(low,len)
+  // center = close - (highest+lowest)/2
+  // smi_raw = ema(ema(center,k),d) / ema(ema(hl/2,k),d) * 100
+  // smi_ema = ema(smi_raw, 3)
+  if(kLen===undefined) kLen=SMI_K;
+  if(d===undefined) d=SMI_D;
+  if(sm===undefined) sm=SMI_SM;
+  const n=closes.length;
+  const smiOut=new Array(n).fill(null);
+  // ta.ema: starts from first non-null, standard EMA k=2/(len+1)
+  function ema(arr,len){
+    const r=arr.slice();
+    let f=0; while(f<n&&r[f]===null)f++;
+    if(f>=n) return r;
     const k=2/(len+1);
-    for(let i=f+1;i<r.length;i++) if(r[i]!==null) r[i]=r[i]*k+r[i-1]*(1-k);
+    for(let i=f+1;i<n;i++) if(r[i]!==null) r[i]=r[i]*k+r[i-1]*(1-k);
     return r;
   }
-  const hl2=new Array(n).fill(null), m=new Array(n).fill(null);
+  const hl=new Array(n).fill(null), center=new Array(n).fill(null);
   for(let i=kLen-1;i<n;i++){
-    const hiMax=Math.max(...highs.slice(i-kLen+1,i+1));
-    const loMin=Math.min(...lows.slice(i-kLen+1,i+1));
-    hl2[i]=(hiMax-loMin);
-    m[i]=closes[i]-((hiMax+loMin)/2);
+    let hiMax=highs[i],loMin=lows[i];
+    for(let j=i-kLen+1;j<i;j++){if(highs[j]>hiMax)hiMax=highs[j];if(lows[j]<loMin)loMin=lows[j]}
+    const hlv=hiMax-loMin;
+    hl[i]=hlv===0?1:hlv;            // hl_safe: avoid divide by zero
+    center[i]=closes[i]-(hiMax+loMin)/2;
   }
-  const mD=ema2(ema2(m,d,kLen-1),d,kLen-1);
-  const hD=ema2(ema2(hl2,d,kLen-1),d,kLen-1);
+  // smi_numerator = ema(ema(center, k), d)
+  const num=ema(ema(center,d),d);
+  // smi_denominator = ema(ema(hl/2, k), d)
+  const hlHalf=hl.map(v=>v===null?null:v/2);
+  const den=ema(ema(hlHalf,d),d);
+  // smi_raw
+  const smiRaw=new Array(n).fill(null);
   for(let i=0;i<n;i++){
-    if(mD[i]!==null&&hD[i]!==null&&hD[i]!==0) smi[i]=(mD[i]/(hD[i]/2))*100;
+    if(num[i]!==null&&den[i]!==null&&den[i]!==0) smiRaw[i]=num[i]/den[i]*100;
   }
-  const sigR=ema2(smi,sm,0);
-  return {smi, sig:sigR};
+  // smi_ema = ema(smi_raw, 3)
+  const smiSig=ema(smiRaw.slice(),sm);
+  return {smi:smiRaw, sig:smiSig};
 }
 function calcATR(highs, lows, closes, p=14) {
   const n=closes.length, atrs=new Array(n).fill(null);
@@ -796,7 +814,7 @@ function pearsonCorr(a, b) {
 // MULTI-LOOKBACK BAND ENGINE
 // ═══════════════════════════════════════════════════════════
 const BAND_LOOKBACKS = [30, 60, 100, 250]; // all 4 lookbacks computed per stock
-const BAND_LB = 60; // primary lookback for signal detection gate
+const BAND_LB = 100; // primary lookback — 100d = quarterly range, best balance for band zones
 
 function calcBandAtLB(closes, lookback) {
   const NB=10, n=closes.length;
@@ -870,7 +888,7 @@ function detectSALT(h9arr, h10arr, smiArr, smiSigArr, bandZone) {
   const SIG_PRI = {'B1-OS':8,'B2':7,'B1-MOM':6,'B3':5,'S1-OB':4,'S2':3,'S1-MOM':2,'S3':1,'WAIT':0};
   let bestSig = 'WAIT';
 
-  for(let offset = 0; offset < 5; offset++) {
+  for(let offset = 0; offset < 10; offset++) {
     const evalIdx = n - 1 - offset;
     if(evalIdx < 12) break;
 
@@ -900,14 +918,23 @@ function detectSALT(h9arr, h10arr, smiArr, smiSigArr, bandZone) {
     const isSell = bandZone==='rej_hi'||bandZone==='above_va';
 
     let sig='WAIT';
-    if(d9>0&&pd9<0&&cSMI<-20&&cSIG<-20&&isBuy)         sig='B1-OS';
-    else if(d9>0&&pd9<0&&cSMI>25&&cSIG>25&&isBuy)       sig='B1-MOM';
-    else if(xUp&&d10>0&&cSMI<-20&&cSIG<-20&&!isSell)    sig='B2';
-    else if(d9>0&&d10>0&&cSMI>-10&&cSIG>-10&&!isSell)   sig='B3';
-    else if(d9<0&&pd9>0&&cSMI>20&&cSIG>20&&isSell)      sig='S1-OB';
-    else if(d9<0&&pd9>0&&cSMI<-25&&cSIG<-25&&isSell)    sig='S1-MOM';
-    else if(xDn&&d10<0&&cSMI>20&&cSIG>20&&!isBuy)       sig='S2';
-    else if(d9<0&&d10<0&&cSMI<10&&cSIG<10&&!isBuy)      sig='S3';
+    // Exact match to SALT Pine Script (HMA 9/10, SMI 10,3,3)
+    // B1-OS: HMA9 turns up + SMI not overbought (TV: smi_raw<20 AND smi_ema<20) + buy zone
+    if(d9>0&&pd9<0&&cSMI<20&&cSIG<20&&isBuy)             sig='B1-OS';
+    // B1-MOM: HMA9 turns up + strong positive momentum (TV: smi_ok_momentum >25) + buy zone
+    else if(d9>0&&pd9<0&&cSMI>25&&cSIG>25&&isBuy)        sig='B1-MOM';
+    // B2: HMA9 crosses above HMA10 + SMI not overbought (TV: crossover + smi<20)
+    else if(xUp&&cSMI<20&&cSIG<20&&!isSell)              sig='B2';
+    // B3: both HMAs rising + SMI positive momentum (TV: smi_ok_b3 = raw>10 AND ema>10)
+    else if(d9>0&&d10>0&&cSMI>10&&cSIG>10&&!isSell)      sig='B3';
+    // S1-OB: HMA9 turns down + SMI not oversold (TV: smi_raw>-20 AND smi_ema>-20) + sell zone
+    else if(d9<0&&pd9>0&&cSMI>-20&&cSIG>-20&&isSell)     sig='S1-OB';
+    // S1-MOM: HMA9 turns down + strong neg momentum (TV: smi_ok_short_momentum <-25) + sell zone
+    else if(d9<0&&pd9>0&&cSMI<-25&&cSIG<-25&&isSell)     sig='S1-MOM';
+    // S2: HMA9 crosses below HMA10 + SMI not oversold (TV: crossunder + smi>-20)
+    else if(xDn&&cSMI>-20&&cSIG>-20&&!isBuy)             sig='S2';
+    // S3: both HMAs falling + SMI negative momentum (TV: smi_ok_s3 = raw<-10 AND ema<-10)
+    else if(d9<0&&d10<0&&cSMI<-10&&cSIG<-10&&!isBuy)     sig='S3';
 
     if((SIG_PRI[sig]||0) > (SIG_PRI[bestSig]||0)) bestSig=sig;
   }
@@ -1101,7 +1128,7 @@ function baseScore(sig, bandZone, weeklyTrend, hvp, rr, concordanceScore) {
   const sigS = {'B1-OS':28,'B1-MOM':22,'B2':30,'B3':10,
                  'S1-OB':28,'S1-MOM':22,'S2':30,'S3':10};
   s += sigS[sig] || 0;
-  // 2. Primary band zone — 60d (data-calibrated)
+  // 2. Primary band zone — 100d (quarterly range, best balance)
   // KEY: below_va beats rej_lo for BUY (rej_lo = downtrend trap, WR 51%)
   //      rej_hi beats above_va for SELL (above_va = weak signal zone)
   const isBuy2=sig.startsWith('B'), isSell2=sig.startsWith('S');
@@ -1364,7 +1391,7 @@ async function processAll(bySymbol) {
 
     // Multi-lookback band zones
     const allBands = calcAllBands(closes);
-    const bd60 = allBands[60] || allBands[30] || allBands[100];
+    const bd60 = allBands[100] || allBands[60] || allBands[250] || allBands[30];
     const bandZone = bd60 ? bd60.zone : 'va';
     const concord = zoneConcordance(allBands);
     const concordanceScore = concord.score;
@@ -2213,7 +2240,7 @@ function renderTop25() {
     const kStr=s.kelly_pct!==null?s.kelly_pct+'%':'—';
     const goodFlag=s.is_good_combo?'<span class="b b-bull" style="font-size:7px">EV+</span> ':'';
     const retStr=s.ret_250!==null?(s.ret_250>0?'+':'')+s.ret_250+'%':'—';
-    const bz=bandZoneBadge(s.band_60||s.band_zone);
+    const bz=bandZoneBadge(s.band_100||s.band_60||s.band_zone);
     const scoreCls=s.score>=thr?'c-bull':s.score>=(thr-15)?'c-amb':'c-dim';
     const idealFlag=s.score>=thr?'★ ':'';
     const histWR=s.wr_lookup!==null&&s.wr_lookup!==undefined?s.wr_lookup+'%':'—';
