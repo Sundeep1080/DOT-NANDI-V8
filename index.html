@@ -326,7 +326,7 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
           <button class="btn btn-d" style="font-size:8px;padding:2px 7px" onclick="sortTop25('buy','rr')">R:R</button>
         </div>
       </div>
-      <div class="tw"><table id="top25BuyTbl"><thead><tr><th>#</th><th>Symbol</th><th>Sig</th><th>Score</th><th>Concord</th><th>100d Zone</th><th>HVP</th><th>CMP</th><th>TP +2.0%</th><th>SL -3.5%</th><th>R:R</th><th>HistWR%</th><th>Kelly%</th><th>250d</th></tr></thead><tbody id="top25BuyBody"></tbody></table></div>
+      <div class="tw"><table id="top25BuyTbl"><thead><tr><th>#</th><th>Symbol</th><th>Sig</th><th>Score</th><th>Concord</th><th id="thTop25BuyZone">100d Zone</th><th>HVP</th><th>CMP</th><th>TP +2.0%</th><th>SL -3.5%</th><th>R:R</th><th>HistWR%</th><th>Kelly%</th><th>250d</th></tr></thead><tbody id="top25BuyBody"></tbody></table></div>
     </div>
     <div class="top25-panel">
       <div class="top25-hdr bear">
@@ -337,7 +337,7 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
           <button class="btn btn-d" style="font-size:8px;padding:2px 7px" onclick="sortTop25('sell','rr')">R:R</button>
         </div>
       </div>
-      <div class="tw"><table id="top25SellTbl"><thead><tr><th>#</th><th>Symbol</th><th>Sig</th><th>Score</th><th>Concord</th><th>100d Zone</th><th>HVP</th><th>CMP</th><th>TP +2.0%</th><th>SL -3.5%</th><th>R:R</th><th>HistWR%</th><th>Kelly%</th><th>250d</th></tr></thead><tbody id="top25SellBody"></tbody></table></div>
+      <div class="tw"><table id="top25SellTbl"><thead><tr><th>#</th><th>Symbol</th><th>Sig</th><th>Score</th><th>Concord</th><th id="thTop25SellZone">100d Zone</th><th>HVP</th><th>CMP</th><th>TP +2.0%</th><th>SL -3.5%</th><th>R:R</th><th>HistWR%</th><th>Kelly%</th><th>250d</th></tr></thead><tbody id="top25SellBody"></tbody></table></div>
     </div>
   </div>
   <div class="insights-strip" id="insightStrip" style="display:none"></div>
@@ -349,6 +349,16 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
       <select class="fi" id="fIdx" onchange="applyFilters()"><option value="">All Indices</option></select>
       <select class="fi" id="fBand" onchange="applyFilters()"><option value="">All Zones</option><option value="rej_lo">REJ Lo</option><option value="below_va">Below VA</option><option value="va">VA</option><option value="above_va">Above VA</option><option value="rej_hi">REJ Hi</option></select>
       <input class="fi" id="fSearch" placeholder="Search symbol…" oninput="applyFilters()" style="width:130px">
+      <select class="fi" id="selMinDays" title="Minimum trading days required per stock" style="min-width:90px" onchange="updateLookbackHeaders()">
+        <option value="60">Min 60d</option>
+        <option value="100" selected>Min 100d</option>
+        <option value="150">Min 150d</option>
+        <option value="250">Min 250d</option>
+      </select>
+      <select class="fi" id="selLookback" title="Band lookback period — primary zone used for signal detection" style="min-width:105px" onchange="updateLookbackHeaders()">
+        <option value="100" selected>Lookback 100d</option>
+        <option value="250">Lookback 250d</option>
+      </select>
       <button class="btn btn-d" onclick="clearFilters()"><i class="fas fa-times"></i> Clear</button>
       <button class="btn btn-a" onclick="exportSignals()"><i class="fas fa-download"></i> Export CSV</button>
     </div>
@@ -361,7 +371,7 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
         <th onclick="sortSig('concordance')">Concordance</th>
         <th onclick="sortSig('band_30')">30d</th>
         <th onclick="sortSig('band_60')">60d</th>
-        <th onclick="sortSig('band_100')" style="font-weight:900;color:var(--amber)">100d★</th>
+        <th onclick="sortSig('band_100')" id="thPrimaryBand" style="font-weight:900;color:var(--amber)">100d★</th>
         <th onclick="sortSig('band_250')">250d</th>
         <th onclick="sortSig('hvp')">HVP</th>
         <th onclick="sortSig('cmp')">CMP</th>
@@ -847,7 +857,9 @@ function pearsonCorr(a, b) {
 // MULTI-LOOKBACK BAND ENGINE
 // ═══════════════════════════════════════════════════════════
 const BAND_LOOKBACKS = [30, 60, 100, 250]; // all 4 lookbacks computed per stock
-const BAND_LB = 100; // primary lookback — 100d = quarterly range, best balance for band zones
+let BAND_LB = 100; // primary lookback — set by UI dropdown (100 or 250)
+function getBandLB() { const el=document.getElementById('selLookback'); return el?parseInt(el.value)||100:BAND_LB; }
+function getMinDays() { const el=document.getElementById('selMinDays'); return el?parseInt(el.value)||60:60; }
 
 function calcBandAtLB(closes, lookback) {
   const NB=10, n=closes.length;
@@ -876,7 +888,7 @@ function calcBandAtLB(closes, lookback) {
 }
 
 function calcBands(closes, lookback) {
-  return calcBandAtLB(closes, lookback || BAND_LB);
+  return calcBandAtLB(closes, lookback || getBandLB());
 }
 
 function calcAllBands(closes) {
@@ -913,57 +925,49 @@ function zoneConcordance(allBands) {
 }
 
 function detectSALT(h9arr, h10arr, smiArr, smiSigArr, bandZone) {
+  // ── Exact IRAVAT implementation: evaluate current bar only ──
   const n = h9arr.length;
-  if(n < 15) return 'WAIT';
+  if(n < 3) return 'WAIT';
 
-  // Scan last 5 bars — return the strongest signal in window
-  // Priority: B1-OS > B2 > B1-MOM > B3 > S1-OB > S2 > S1-MOM > S3
-  const SIG_PRI = {'B1-OS':8,'B2':7,'B1-MOM':6,'B3':5,'S1-OB':4,'S2':3,'S1-MOM':2,'S3':1,'WAIT':0};
-  let bestSig = 'WAIT';
-
-  for(let offset = 0; offset < 10; offset++) {
-    const evalIdx = n - 1 - offset;
-    if(evalIdx < 12) break;
-
-    // Collect last 3 valid HMA9 values ending at evalIdx
-    const v9=[], vi=[];
-    for(let i=evalIdx; i>=0&&v9.length<3; i--){
-      if(h9arr[i]!==null&&!isNaN(h9arr[i])){v9.unshift(h9arr[i]);vi.unshift(i)}
-    }
-    if(v9.length<3) continue;
-    const[pp9,p9,c9]=v9, [ppI,pI,cI]=vi;
-    const p10=h10arr[pI], c10=h10arr[cI];
-    if(p10===null||c10===null) continue;
-    const cSMI=smiArr[cI]||0, cSIG=smiSigArr[cI]||0;
-    const d9=c9-p9, pd9=p9-pp9, d10=c10-p10;
-
-    // 3-bar crossover window: check if crossover happened within last 3 bars of evalIdx
-    let xUp=false, xDn=false;
-    for(let k=0; k<3&&evalIdx-k>=1; k++){
-      const ci=evalIdx-k, pi=evalIdx-k-1;
-      if(h9arr[ci]!==null&&h10arr[ci]!==null&&h9arr[pi]!==null&&h10arr[pi]!==null){
-        if(h9arr[ci]>h10arr[ci]&&h9arr[pi]<=h10arr[pi]) xUp=true;
-        if(h9arr[ci]<h10arr[ci]&&h9arr[pi]>=h10arr[pi]) xDn=true;
-      }
-    }
-
-    const isBuy  = bandZone==='rej_lo'||bandZone==='below_va';
-    const isSell = bandZone==='rej_hi'||bandZone==='above_va';
-
-    let sig='WAIT';
-    // ── Exact IRAVAT signal conditions (band-zone gated) ──
-    if (d9>0&&pd9<0&&cSMI<-20&&cSIG<-20&&isBuy)  sig='B1-OS';
-    else if (d9>0&&pd9<0&&cSMI>25&&cSIG>25&&isBuy)  sig='B1-MOM';
-    else if (xUp&&d10>0&&cSMI<-20&&cSIG<-20&&!isSell)  sig='B2';
-    else if (d9>0&&d10>0&&cSMI>-10&&cSIG>-10&&!isSell)  sig='B3';
-    else if (d9<0&&pd9>0&&cSMI>20&&cSIG>20&&isSell)  sig='S1-OB';
-    else if (d9<0&&pd9>0&&cSMI<-25&&cSIG<-25&&isSell)  sig='S1-MOM';
-    else if (xDn&&d10<0&&cSMI>20&&cSIG>20&&!isBuy)  sig='S2';
-    else if (d9<0&&d10<0&&cSMI<10&&cSIG<10&&!isBuy)  sig='S3';
-
-    if((SIG_PRI[sig]||0) > (SIG_PRI[bestSig]||0)) bestSig=sig;
+  // Collect last 3 valid HMA9 values + their indices
+  const v9 = [], vi = [];
+  for (let i = n - 1; i >= 0 && v9.length < 3; i--) {
+    if (h9arr[i] !== null && !isNaN(h9arr[i])) { v9.unshift(h9arr[i]); vi.unshift(i); }
   }
-  return bestSig;
+  if (v9.length < 3) return 'WAIT';
+
+  const [pp9, p9, c9] = v9;
+  const [ppI, pI, cI] = vi;
+  const p10 = h10arr[pI], c10 = h10arr[cI];
+  if (p10 === null || c10 === null) return 'WAIT';
+
+  const cSMI = smiArr[cI] || 0;
+  const cSIG  = smiSigArr[cI] || 0;
+
+  const d9  = c9 - p9;
+  const pd9 = p9 - pp9;
+  const d10 = c10 - p10;
+
+  // Exact single-bar crossover (matches IRAVAT / TradingView)
+  const xUp = c9 > c10 && p9 <= (h10arr[pI] ?? c10);
+  const xDn = c9 < c10 && p9 >= (h10arr[pI] ?? c10);
+
+  const isBuyZone  = bandZone === 'rej_lo' || bandZone === 'below_va';
+  const isSellZone = bandZone === 'rej_hi' || bandZone === 'above_va';
+
+  if (d9 > 0 && pd9 < 0 && cSMI < -20 && cSIG < -20 && isBuyZone)  return 'B1-OS';
+  if (d9 > 0 && pd9 < 0 && cSMI >  25 && cSIG >  25 && isBuyZone)  return 'B1-MOM';
+  if (xUp && d10 > 0 && cSMI < -20 && cSIG < -20 && !isSellZone)   return 'B2';
+  if (d9 > 0 && d10 > 0 && cSMI > -10 && cSIG > -10 && !isSellZone) return 'B3';
+  if (d9 < 0 && pd9 > 0 && cSMI >  20 && cSIG >  20 && isSellZone) return 'S1-OB';
+  if (d9 < 0 && pd9 > 0 && cSMI < -25 && cSIG < -25 && isSellZone) return 'S1-MOM';
+  if (xDn && d10 < 0 && cSMI >  20 && cSIG >  20 && !isBuyZone)    return 'S2';
+  if (d9 < 0 && d10 < 0 && cSMI <  10 && cSIG <  10 && !isBuyZone) return 'S3';
+  if (d9 > 0 && pd9 < 0 && d10 > 0)                                 return 'HSE';
+  if (d9 > 0.5 && d10 > 0.5 && (cSMI > 25 || cSIG > 25))           return 'SE';
+  if (d9 < 0 && pd9 > 0 && d10 < 0)                                 return 'HLE';
+  if (d9 < -0.5 && d10 < -0.5 && (cSMI < -25 || cSIG < -25))       return 'LE';
+  return 'WAIT';
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1351,7 +1355,7 @@ async function processAll(bySymbol) {
   stockReturns={};
   stockSyms.forEach(sym=>{
     const rows=bySymbol[sym].rows;
-    if(rows.length<50)return;
+    if(rows.length<getMinDays())return;
     const closes=rows.map(r=>r.cl), n=closes.length-1;
     const ret=(closes[n]-closes[0])/closes[0]*100;
     stockReturns[sym]={ret_250:parseFloat(ret.toFixed(2))};
@@ -1405,7 +1409,7 @@ async function processAll(bySymbol) {
     const info=bySymbol[sym];
     const rows=info.rows, closes=rows.map(r=>r.cl);
     const highs=rows.map(r=>r.hi), lows=rows.map(r=>r.lo);
-    if(closes.length<15)continue;
+    if(closes.length<getMinDays())continue;
 
     const h9=calcHMA(closes,HMA_FAST), h10=calcHMA(closes,HMA_SLOW);
     const {smi,sig:smiSig}=calcSMI(highs,lows,closes);
@@ -1416,7 +1420,8 @@ async function processAll(bySymbol) {
 
     // Multi-lookback band zones
     const allBands = calcAllBands(closes);
-    const bd60 = allBands[100] || allBands[60] || allBands[250] || allBands[30];
+    const primaryLB = getBandLB();
+    const bd60 = allBands[primaryLB] || allBands[100] || allBands[60] || allBands[250] || allBands[30];
     const bandZone = bd60 ? bd60.zone : 'va';
     const concord = zoneConcordance(allBands);
     const concordanceScore = concord.score;
@@ -1483,6 +1488,7 @@ async function processAll(bySymbol) {
       band_60:allBands[60]?allBands[60].zone:null,
       band_100:allBands[100]?allBands[100].zone:null,
       band_250:allBands[250]?allBands[250].zone:null,
+      band_primary:allBands[primaryLB]?allBands[primaryLB].zone:bandZone,
       concordance:concord.agreement,concordance_score:concordanceScore,
       wr_lookup:WR_LOOKUP[signal+'|'+bandZone]||null,
       breakeven_wr:BREAKEVEN_WR,
@@ -1761,7 +1767,7 @@ function runIndicatorLab(bySymbol,stockSyms) {
   const SAMPLE=Math.min(80,stockSyms.length);
   const sample=stockSyms.slice(0,SAMPLE);
   const combos=[
-    {name:'HMA+SMI',fn:(h,l,c)=>{const h9=calcHMA(c,9),h10=calcHMA(c,10),{smi}=calcSMI(h,l,c);const n=c.length-1;if(h9[n]===null)return'WAIT';const bd=calcBands(c);return detectSALT(h9,h10,smi,smi,bd?bd.bandZone:'va')}},
+    {name:'HMA+SMI',fn:(h,l,c)=>{const h9=calcHMA(c,9),h10=calcHMA(c,10),{smi,sig:smiSig}=calcSMI(h,l,c);const n=c.length-1;if(h9[n]===null)return'WAIT';const bd=calcBands(c);return detectSALT(h9,h10,smi,smiSig,bd?bd.bandZone:'va')}},
     {name:'RSI(14)',fn:(h,l,c)=>{const rsi=calcRSI(c);const n=c.length-1;if(rsi[n]===null)return'WAIT';return rsi[n]<35?'B2':rsi[n]>65?'S2':'WAIT'}},
     {name:'HMA+RSI',fn:(h,l,c)=>{const h9=calcHMA(c,9),h10=calcHMA(c,10),rsi=calcRSI(c);const n=c.length-1;if(h9[n]===null)return'WAIT';const xUp=h9[n]>h10[n]&&h9[n-1]<=h10[n-1];const xDn=h9[n]<h10[n]&&h9[n-1]>=h10[n-1];if(xUp&&rsi[n]<40)return'B2';if(xDn&&rsi[n]>60)return'S2';if(h9[n]>h9[n-1]&&h9[n-1]<=h9[n-2]&&rsi[n]<40)return'B1-OS';return'WAIT'}},
     {name:'MACD',fn:(h,l,c)=>{const{macd,signal}=calcMACD(c);const n=c.length-1;if(macd[n]===null)return'WAIT';if(macd[n]>signal[n]&&macd[n-1]<=signal[n-1])return'B2';if(macd[n]<signal[n]&&macd[n-1]>=signal[n-1])return'S2';return'WAIT'}},
@@ -2265,7 +2271,7 @@ function renderTop25() {
     const kStr=s.kelly_pct!==null?s.kelly_pct+'%':'—';
     const goodFlag=s.is_good_combo?'<span class="b b-bull" style="font-size:7px">EV+</span> ':'';
     const retStr=s.ret_250!==null?(s.ret_250>0?'+':'')+s.ret_250+'%':'—';
-    const bz=bandZoneBadge(s.band_100||s.band_60||s.band_zone);
+    const bz=bandZoneBadge(s.band_primary||s.band_100||s.band_60||s.band_zone);
     const scoreCls=s.score>=thr?'c-bull':s.score>=(thr-15)?'c-amb':'c-dim';
     const idealFlag=s.score>=thr?'★ ':'';
     const histWR=s.wr_lookup!==null&&s.wr_lookup!==undefined?s.wr_lookup+'%':'—';
@@ -2319,6 +2325,17 @@ let sigFiltered=[];
 function renderSigTable() {
   applyFilters();
 }
+function updateLookbackHeaders() {
+  const lb = getBandLB();
+  const lbl = lb + 'd★';
+  const zoneLbl = lb + 'd Zone';
+  const th = document.getElementById('thPrimaryBand');
+  if (th) th.textContent = lbl;
+  const th2 = document.getElementById('thTop25BuyZone');
+  if (th2) th2.textContent = zoneLbl;
+  const th3 = document.getElementById('thTop25SellZone');
+  if (th3) th3.textContent = zoneLbl;
+}
 function applyFilters() {
   const fSig=(document.getElementById('fSig')||{}).value||'';
   const fSec=(document.getElementById('fSec')||{}).value||'';
@@ -2353,7 +2370,7 @@ function applyFilters() {
       <td>${concBadge}</td>
       <td style="font-size:8px">${bandZoneBadge(s.band_30)}</td>
       <td style="font-size:8px">${bandZoneBadge(s.band_60)}</td>
-      <td style="font-size:8px">${bandZoneBadge(s.band_100)}</td>
+      <td style="font-size:8px">${bandZoneBadge(s.band_primary||s.band_100)}</td>
       <td style="font-size:8px">${bandZoneBadge(s.band_250)}</td>
       <td><span class="${s.hvp>60?'c-bull':s.hvp<35?'c-bear':'c-amb'}">${s.hvp}</span></td>
       <td>₹${s.cmp.toFixed(1)}</td>
