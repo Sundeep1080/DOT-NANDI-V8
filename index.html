@@ -326,15 +326,7 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
           <button class="btn btn-d" style="font-size:8px;padding:2px 7px" onclick="sortTop25('buy','rr')">R:R</button>
         </div>
       </div>
-            <div style="background:rgba(99,102,241,.07);border-bottom:1px solid var(--border);padding:5px 10px;font-family:var(--mono);font-size:8px;color:var(--text2);display:flex;gap:12px;flex-wrap:wrap">
-        <span style="color:var(--bull);font-weight:700">EV+ signals shown first (★)</span>
-        <span>B2/B3×below_va: <strong class="c-bull">74%/72% WR</strong> — BEST</span>
-        <span>B1-MOM×rej_lo: <strong class="c-bull">73% WR</strong> — BEST</span>
-        <span>B2/B3×va: <strong class="c-bull">68%/66%</strong> — GOOD</span>
-        <span style="color:var(--bear)">B1-MOM×below_va: <strong>47% WR</strong> — below breakeven, shown but avoid</span>
-        <span style="color:var(--text3)">Breakeven: 63.6% | TP=2% SL=3.5%</span>
-      </div>
-<div class="tw"><table id="top25BuyTbl"><thead><tr><th>#</th><th>Symbol</th><th>Sig</th><th>Score</th><th>Concord</th><th id="thTop25BuyZone">100d Zone</th><th>HVP</th><th>CMP</th><th>TP +2.0%</th><th>SL -3.5%</th><th>R:R</th><th>HistWR%</th><th>Kelly%</th><th>250d</th></tr></thead><tbody id="top25BuyBody"></tbody></table></div>
+      <div class="tw"><table id="top25BuyTbl"><thead><tr><th>#</th><th>Symbol</th><th>Sig</th><th>Score</th><th>Concord</th><th id="thTop25BuyZone">100d Zone</th><th>HVP</th><th>CMP</th><th>TP Target</th><th>TP%</th><th>SL Stop</th><th>R:R</th><th>HistWR%</th><th>Kelly%</th><th>250d</th></tr></thead><tbody id="top25BuyBody"></tbody></table></div>
     </div>
     <div class="top25-panel">
       <div class="top25-hdr bear">
@@ -345,7 +337,7 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
           <button class="btn btn-d" style="font-size:8px;padding:2px 7px" onclick="sortTop25('sell','rr')">R:R</button>
         </div>
       </div>
-      <div class="tw"><table id="top25SellTbl"><thead><tr><th>#</th><th>Symbol</th><th>Sig</th><th>Score</th><th>Concord</th><th id="thTop25SellZone">100d Zone</th><th>HVP</th><th>CMP</th><th>TP +2.0%</th><th>SL -3.5%</th><th>R:R</th><th>HistWR%</th><th>Kelly%</th><th>250d</th></tr></thead><tbody id="top25SellBody"></tbody></table></div>
+      <div class="tw"><table id="top25SellTbl"><thead><tr><th>#</th><th>Symbol</th><th>Sig</th><th>Score</th><th>Concord</th><th id="thTop25SellZone">100d Zone</th><th>HVP</th><th>CMP</th><th>TP Target</th><th>TP%</th><th>SL Stop</th><th>R:R</th><th>HistWR%</th><th>Kelly%</th><th>250d</th></tr></thead><tbody id="top25SellBody"></tbody></table></div>
     </div>
   </div>
   <div class="insights-strip" id="insightStrip" style="display:none"></div>
@@ -383,7 +375,7 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
         <th onclick="sortSig('band_250')">250d</th>
         <th onclick="sortSig('hvp')">HVP</th>
         <th onclick="sortSig('cmp')">CMP</th>
-        <th onclick="sortSig('tp')">TP</th>
+        <th onclick="sortSig('tp')" title="Band-anchored target (Value Area Midpoint or next band high)">TP ▸</th>
         <th onclick="sortSig('sl')">SL</th>
         <th onclick="sortSig('rr')">R:R</th>
         <th onclick="sortSig('kelly_pct')">Kelly%</th>
@@ -401,14 +393,14 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
   <div class="card" style="margin-bottom:8px">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
       <div class="ct"><i class="fas fa-layer-group"></i> Daily Portfolio Engine
-        <span style="font-family:var(--mono);font-size:8px;color:var(--text2);font-weight:400;margin-left:6px">Mon→Fri · Tue→Mon · Wed→Tue · Thu→Wed · Fri→Thu</span>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--text2);font-weight:400;margin-left:6px">Mon→Fri · Tue→Mon · Wed→Tue · Thu→Wed · Fri→Mon</span>
       </div>
       <div class="btn-row">
         <label style="font-family:var(--mono);font-size:9px;color:var(--text2)">Capital ₹</label>
         <input class="fi" id="pfCapital" value="500000" style="width:100px">
         <label style="font-family:var(--mono);font-size:9px;color:var(--text2)">Min score</label>
         <input class="fi" id="pfMinScore" value="55" style="width:55px" title="Regime auto-enforces minimum. Breakeven WR=63.6% with TP=2% SL=3.5%">
-        <button class="btn btn-a" onclick="createDailyPortfolios()"><i class="fas fa-plus"></i> Create Today's Portfolios</button>
+        <button class="btn btn-a" onclick="createDailyPortfolios()"><i class="fas fa-clock"></i> Create Today's Portfolios <span style="font-size:8px;opacity:.7">(3–3:30pm)</span></button>
         <button class="btn btn-g" onclick="updateDPFPnL()"><i class="fas fa-sync"></i> Update P&L</button>
         <button class="btn btn-r" onclick="dissolvePortfolios()"><i class="fas fa-check-circle"></i> Dissolve Expired</button>
       </div>
@@ -553,31 +545,22 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
     <div class="ct amber"><i class="fas fa-table"></i> Win Rate Reference — TP=2.0% SL=3.5% (RR 1:1.75, Breakeven WR=63.6%)</div>
     <div style="font-family:var(--mono);font-size:8px;color:var(--bear);margin-bottom:8px;padding:6px 8px;background:var(--bear-g);border-radius:4px">
       Primary lookback: 100d (quarterly range). Scan window: 10 bars. TP=2.0% SL=3.5% → RR 1:1.75 → profitable at WR &gt;63.6%.
-      KEY: B1-MOM×rej_lo = 73.3% WR (BEST BUY zone). B1-MOM×below_va = 47.4% (AVOID — below breakeven). B2/B3×below_va are the highest EV combos. rej_lo is a TRAP for B1-OS/B2 (WR=51-57%).
+      KEY: rej_lo is a TRAP for BUY (WR=51%). below_va &amp; va are the real money zones (WR=66-74%).
     </div>
     <div class="grid2">
       <div>
         <div style="font-family:var(--mono);font-size:8px;color:var(--text2);margin-bottom:6px">BY SIGNAL (TP=2.0% SL=3.5%, primary=100d, scan=10bars)</div>
         <div class="tw"><table><thead><tr><th>Signal</th><th>WR%</th><th>EV/trade</th><th>AvgWin</th><th>Grade</th></tr></thead>
-        <tbody id="wrRefSignalBody">
-          <tr><td><strong>B2×below_va</strong></td><td class="c-bull">74%</td><td class="c-bull">+0.55%</td><td>2.0d</td><td><span class="b b-bull">★ BEST BUY</span></td></tr>
-          <tr><td><strong>B1-MOM×rej_lo</strong></td><td class="c-bull">73%</td><td class="c-bull">+0.48%</td><td>1.8d</td><td><span class="b b-bull">★ BEST BUY</span></td></tr>
-          <tr><td><strong>B3×below_va</strong></td><td class="c-bull">72%</td><td class="c-bull">+0.47%</td><td>1.8d</td><td><span class="b b-bull">★ TAKE IT</span></td></tr>
-          <tr><td><strong>B2×va</strong></td><td class="c-bull">68%</td><td class="c-bull">+0.22%</td><td>1.9d</td><td><span class="b b-teal">GOOD</span></td></tr>
-          <tr><td><strong>B3×va</strong></td><td class="c-amb">66%</td><td class="c-bull">+0.14%</td><td>1.8d</td><td><span class="b b-teal">GOOD</span></td></tr>
+        <tbody>
+          <tr><td>B2×below_va</td><td class="c-bull">74%</td><td class="c-bull">+0.55%</td><td>2.0d</td><td><span class="b b-bull">★ BEST BUY</span></td></tr>
+          <tr><td>B3×below_va</td><td class="c-bull">72%</td><td class="c-bull">+0.47%</td><td>1.8d</td><td><span class="b b-bull">★ TAKE IT</span></td></tr>
+          <tr><td>B2×va</td><td class="c-bull">68%</td><td class="c-bull">+0.22%</td><td>1.9d</td><td><span class="b b-teal">GOOD</span></td></tr>
+          <tr><td>B3×va</td><td class="c-amb">66%</td><td class="c-bull">+0.14%</td><td>1.8d</td><td><span class="b b-teal">GOOD</span></td></tr>
           <tr><td>B1-OS×below_va</td><td class="c-amb">56%</td><td class="c-bear">-0.41%</td><td>1.8d</td><td><span class="b b-dim">MARGINAL</span></td></tr>
-          <tr><td>B2×rej_lo ⚠</td><td class="c-amb">57%</td><td class="c-bear">-0.35%</td><td>1.8d</td><td><span class="b b-bear">rej_lo TRAP</span></td></tr>
+          <tr><td>B2×rej_lo ⚠</td><td class="c-bear">57%</td><td class="c-bear">-0.35%</td><td>1.8d</td><td><span class="b b-bear">rej_lo TRAP</span></td></tr>
           <tr><td>B1-OS×rej_lo ⚠</td><td class="c-bear">51%</td><td class="c-bear">-0.68%</td><td>1.8d</td><td><span class="b b-bear">AVOID</span></td></tr>
-          <tr><td>B1-MOM×below_va ⚠</td><td class="c-bear">47%</td><td class="c-bear">-0.85%</td><td>1.8d</td><td><span class="b b-bear">AVOID — wrong zone</span></td></tr>
-          <tr style="background:var(--bg3);opacity:.7"><td colspan="5" style="text-align:center;font-size:8px;color:var(--text2);padding:4px">── SELL SIGNALS ──</td></tr>
-          <tr><td><strong>S2×va</strong></td><td class="c-amb">64%</td><td class="c-bull">+0.00%</td><td>1.8d</td><td><span class="b b-teal">BREAKEVEN</span></td></tr>
-          <tr><td><strong>S2×above_va</strong></td><td class="c-amb">59%</td><td class="c-bear">-0.15%</td><td>1.8d</td><td><span class="b b-dim">MARGINAL</span></td></tr>
+          <tr><td>S2×va</td><td class="c-amb">64%</td><td class="c-bull">+0.00%</td><td>1.8d</td><td><span class="b b-teal">BREAKEVEN</span></td></tr>
           <tr><td>S3×va</td><td class="c-amb">62%</td><td class="c-bear">-0.10%</td><td>1.9d</td><td><span class="b b-dim">MARGINAL</span></td></tr>
-          <tr><td>S3×above_va</td><td class="c-amb">52%</td><td class="c-bear">-0.50%</td><td>1.9d</td><td><span class="b b-bear">WEAK</span></td></tr>
-          <tr><td>S3×rej_hi</td><td class="c-amb">55%</td><td class="c-bear">-0.40%</td><td>1.8d</td><td><span class="b b-bear">WEAK</span></td></tr>
-          <tr><td>S2×rej_hi</td><td class="c-bear">51%</td><td class="c-bear">-0.60%</td><td>1.8d</td><td><span class="b b-bear">AVOID</span></td></tr>
-          <tr><td>S1-OB×above_va</td><td class="c-bear">51%</td><td class="c-bear">-0.68%</td><td>1.8d</td><td><span class="b b-bear">AVOID</span></td></tr>
-          <tr><td>S1-OB×rej_hi</td><td class="c-bear">44%</td><td class="c-bear">-1.08%</td><td>1.8d</td><td><span class="b b-bear">WORST SELL</span></td></tr>
         </tbody></table></div>
       </div>
       <div>
@@ -593,10 +576,9 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
         <div style="margin-top:10px;font-family:var(--mono);font-size:8px;color:var(--text2);margin-bottom:6px">BEST COMBINATIONS (TP=2.0% SL=3.5%)</div>
         <div class="tw"><table><thead><tr><th>Signal × Zone</th><th>WR%</th><th>EV</th></tr></thead>
         <tbody>
-          <tr><td><strong>B2 × below_va</strong></td><td class="c-bull">74%</td><td class="c-bull">+0.55%</td></tr>
-          <tr><td><strong>B1-MOM × rej_lo</strong> ⭐</td><td class="c-bull">73%</td><td class="c-bull">+0.48%</td></tr>
-          <tr><td><strong>B3 × below_va</strong></td><td class="c-bull">72%</td><td class="c-bull">+0.47%</td></tr>
-          <tr><td><strong>B2 × va</strong></td><td class="c-bull">68%</td><td class="c-bull">+0.22%</td></tr>
+          <tr><td>B2 × below_va</td><td class="c-bull">74%</td><td class="c-bull">+0.55%</td></tr>
+          <tr><td>B3 × below_va</td><td class="c-bull">72%</td><td class="c-bull">+0.47%</td></tr>
+          <tr><td>B2 × va</td><td class="c-bull">68%</td><td class="c-bull">+0.22%</td></tr>
           <tr><td>B3 × va</td><td class="c-amb">66%</td><td class="c-bull">+0.14%</td></tr>
           <tr><td>S2 × va</td><td class="c-amb">64%</td><td class="c-bull">+0.00%</td></tr>
         </tbody></table></div>
@@ -604,9 +586,9 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
     </div>
     <div style="margin-top:12px;padding:8px 10px;background:var(--bull-g);border-radius:4px;font-family:var(--mono);font-size:9px">
       <strong class="c-bull">💡 OPTIMAL SETTING: TP=2.0% SL=3.5%</strong> — RR 1:1.75, breakeven WR=63.6%.<br>
-      Best combos: B2×below_va (74% WR, +0.55% EV), B1-MOM×rej_lo (73% WR, +0.48% EV) and B3×below_va (72% WR, +0.47% EV).<br>
+      Best combo: B2×below_va (74% WR, +0.55% EV) and B3×below_va (72% WR, +0.47% EV).<br>
       ⚠️ AVOID buy signals in rej_lo zone — despite appearing oversold, WR drops to 51-57% (negative EV).<br>
-      700 stocks generate ~250 buy signals daily → Top 25 easily filled. Filter: only below_va and va zones.
+      700 stocks generate ~250 buy signals daily → Top 25 easily filled. Filter: below_va and va zones. B1-MOM: ONLY take in rej_lo zone (73% WR). B1-MOM×below_va = 47% WR → AVOID (shown in All Signals but excluded from EV+ Top 25).
     </div>
   </div>
 
@@ -1924,14 +1906,22 @@ function createDailyPortfolios() {
   function zoneQuality(s) {
     const isBuy=s.signal.startsWith('B');
     if(isBuy) {
-      if(s.band_60==='below_va') return 3;  // best
+      // B1-MOM ONLY has positive EV in rej_lo zone (73.3% WR)
+      // B1-MOM in below_va = 47.4% WR — BELOW breakeven — exclude from portfolio
+      if(s.signal==='B1-MOM') {
+        if(s.band_60==='rej_lo') return 3;  // 73.3% WR — GOOD
+        return 0;  // all other zones: negative EV for B1-MOM
+      }
+      if(s.band_60==='below_va') return 3;  // best for B2/B3/B1-OS
       if(s.band_60==='va')       return 2;  // good
-      if(s.band_60==='rej_lo')   return 1;  // risky — only if score very high
+      if(s.band_60==='rej_lo')   return 1;  // risky for B2/B3 — 57% WR
       return 0;
     } else {
       if(s.band_60==='rej_hi')   return 3;
       if(s.band_60==='above_va') return 2;
       if(s.band_60==='va')       return 2;
+      // S1-OB only has bad WR — below breakeven in all zones except rej_hi
+      if(s.signal==='S1-OB'&&s.band_60!=='rej_hi') return 0;
       return 1;
     }
   }
@@ -2319,7 +2309,8 @@ function renderTop25() {
   });
   const row=(s,i)=>{
     const kStr=s.kelly_pct!==null?s.kelly_pct+'%':'—';
-    const goodFlag=s.is_good_combo?'<span class="b b-bull" style="font-size:7px">EV+</span> ':'';
+    const goodFlag=s.is_good_combo?'<span class="b b-bull" style="font-size:7px">EV+</span> '
+      :(s.signal==='B1-MOM'&&(s.band_primary||s.band_60)!=='rej_lo'?'<span class="b b-bear" style="font-size:7px">EV-</span> ':'');
     const retStr=s.ret_250!==null?(s.ret_250>0?'+':'')+s.ret_250+'%':'—';
     const bz=bandZoneBadge(s.band_primary||s.band_100||s.band_60||s.band_zone);
     const scoreCls=s.score>=thr?'c-bull':s.score>=(thr-15)?'c-amb':'c-dim';
@@ -2338,6 +2329,7 @@ function renderTop25() {
       <td><span class="${s.hvp>60?'c-bull':s.hvp<35?'c-bear':'c-amb'}">${s.hvp}</span></td>
       <td>₹${s.cmp.toFixed(1)}</td>
       <td class="c-bull">₹${s.tp.toFixed(1)}</td>
+      <td class="c-bull" style="font-size:9px">${s.signal.startsWith("B")?"+":""}${(s.signal.startsWith("B")?(s.tp-s.cmp)/s.cmp*100:(s.cmp-s.tp)/s.cmp*100).toFixed(1)}%</td>
       <td class="c-bear">₹${s.sl.toFixed(1)}</td>
       <td class="${s.rr>=2?'c-bull':s.rr>=1?'c-amb':'c-bear'}">${s.rr}</td>
       <td class="${wrCls}">${histWR}</td>
@@ -2345,8 +2337,8 @@ function renderTop25() {
       <td class="${s.ret_250>0?'c-bull':'c-bear'}">${retStr}</td>
     </tr>`;
   };
-  document.getElementById('top25BuyBody').innerHTML=buys.length?buys.map(row).join(''):`<tr><td colspan="14" class="empty">No buy signals today</td></tr>`;
-  document.getElementById('top25SellBody').innerHTML=sells.length?sells.map(row).join(''):`<tr><td colspan="14" class="empty">No sell signals today</td></tr>`;
+  document.getElementById('top25BuyBody').innerHTML=buys.length?buys.map(row).join(''):`<tr><td colspan="15" class="empty">No buy signals today</td></tr>`;
+  document.getElementById('top25SellBody').innerHTML=sells.length?sells.map(row).join(''):`<tr><td colspan="15" class="empty">No sell signals today</td></tr>`;
 }
 function sortTop25(type,col){if(type==='buy')top25SortBuy=col;else top25SortSell=col;renderTop25()}
 
@@ -2427,6 +2419,7 @@ function applyFilters() {
       <td><span class="${s.hvp>60?'c-bull':s.hvp<35?'c-bear':'c-amb'}">${s.hvp}</span></td>
       <td>₹${s.cmp.toFixed(1)}</td>
       <td class="c-bull">₹${s.tp.toFixed(1)}</td>
+      <td class="c-bull" style="font-size:9px">${s.signal.startsWith("B")?"+":""}${(s.signal.startsWith("B")?(s.tp-s.cmp)/s.cmp*100:(s.cmp-s.tp)/s.cmp*100).toFixed(1)}%</td>
       <td class="c-bear">₹${s.sl.toFixed(1)}</td>
       <td class="${s.rr>=2?'c-bull':s.rr>=1?'c-amb':'c-bear'}">${s.rr}</td>
       <td class="c-teal">${s.kelly_pct!==null?s.kelly_pct+'%':'—'}</td>
