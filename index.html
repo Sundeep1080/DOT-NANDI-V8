@@ -368,7 +368,7 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
         <th onclick="sortSig('sector')">Sector</th>
         <th onclick="sortSig('signal')">Signal</th>
         <th onclick="sortSig('score')">Score▼</th>
-        <th onclick="sortSig('concordance')">Concordance</th>
+        <th onclick="sortSig('weeklyTrend')">Weekly</th>
         <th onclick="sortSig('band_30')">30d</th>
         <th onclick="sortSig('band_60')">60d</th>
         <th onclick="sortSig('band_100')" id="thPrimaryBand" style="font-weight:900;color:var(--amber)">100d★</th>
@@ -854,74 +854,108 @@ function pearsonCorr(a, b) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// MULTI-LOOKBACK BAND ENGINE
+// BAND ENGINE — exact IRAVAT calcBands (full rich object)
 // ═══════════════════════════════════════════════════════════
-const BAND_LOOKBACKS = [30, 60, 100, 250]; // all 4 lookbacks computed per stock
-let BAND_LB = 100; // primary lookback — set by UI dropdown (100 or 250)
+let BAND_LB = 100;
 function getBandLB() { const el=document.getElementById('selLookback'); return el?parseInt(el.value)||100:BAND_LB; }
 function getMinDays() { const el=document.getElementById('selMinDays'); return el?parseInt(el.value)||60:60; }
 
-function calcBandAtLB(closes, lookback) {
-  const NB=10, n=closes.length;
-  if(n<lookback) return null;
-  const sl=closes.slice(-lookback);
-  const hi=Math.max.apply(null,sl), lo=Math.min.apply(null,sl), pRng=hi-lo;
-  if(pRng<1e-9) return null;
-  const bW=pRng/NB, bBars=new Array(NB).fill(0);
-  const bLo=[], bHi=[];
-  for(let i=0;i<NB;i++){bLo.push(lo+bW*i);bHi.push(lo+bW*(i+1))}
-  for(let k=0;k<sl.length;k++){
-    for(let i=0;i<NB;i++){if(sl[k]>=bLo[i]&&sl[k]<=bHi[i]){bBars[i]++;break}}
-  }
-  const ranks=Array.from({length:NB},(_,i)=>i).sort((a,b)=>bBars[b]-bBars[a]);
-  const r1=ranks[0],r2=ranks[1],r3=ranks[2];
-  const vaHiIdx=Math.max(r1,r2,r3), vaLoIdx=Math.min(r1,r2,r3);
-  const cmp=closes[n-1]; let curBand=0;
-  for(let i=0;i<NB;i++){if(cmp>=bLo[i]&&cmp<=bHi[i]){curBand=i;break}}
-  let zone;
-  if(curBand>=NB-1)        zone='rej_hi';
-  else if(curBand>=vaLoIdx&&curBand<=vaHiIdx) zone='va';
-  else if(curBand>vaHiIdx) zone='above_va';
-  else if(curBand<=1)      zone='rej_lo';
-  else                     zone='below_va';
-  return {zone, curBand, vaLo:bLo[vaLoIdx], vaHi:bHi[vaHiIdx], hi, lo, bW, lookback};
-}
-
 function calcBands(closes, lookback) {
-  return calcBandAtLB(closes, lookback || getBandLB());
+  const NB  = 10;
+  const n   = closes.length;
+  const lb  = lookback || getBandLB();
+  if (n < lb) return null;
+  const slice  = closes.slice(-lb);
+  const hiDyn  = Math.max(...slice);
+  const loDyn  = Math.min(...slice);
+  const pRng   = hiDyn - loDyn;
+  if (pRng < 1e-9) return null;
+
+  const bW = pRng / NB;
+  const bHi = [], bLo = [], bBars = [], bMTP = [];
+  for (let i = 0; i < NB; i++) {
+    bLo.push(loDyn + bW * i);
+    bHi.push(loDyn + bW * (i + 1));
+    bBars.push(0);
+  }
+
+  const subBands  = 10;
+  const subCounts = Array.from({length: NB}, () => new Array(subBands).fill(0));
+  for (let k = 0; k < slice.length; k++) {
+    const c = slice[k];
+    for (let i = 0; i < NB; i++) {
+      if (c >= bLo[i] && c <= bHi[i]) {
+        bBars[i]++;
+        const sbSz = bW / subBands;
+        const si   = Math.min(subBands - 1, Math.floor((c - bLo[i]) / sbSz));
+        if (si >= 0) subCounts[i][si]++;
+        break;
+      }
+    }
+  }
+
+  for (let i = 0; i < NB; i++) {
+    let maxC = 0, maxSI = 0;
+    for (let s = 0; s < subBands; s++) {
+      if (subCounts[i][s] > maxC) { maxC = subCounts[i][s]; maxSI = s; }
+    }
+    const sbSz = bW / subBands;
+    bMTP.push(bLo[i] + maxSI * sbSz + sbSz / 2);
+  }
+
+  const ranks  = Array.from({length: NB}, (_, i) => i).sort((a, b) => bBars[b] - bBars[a]);
+  const rank1  = ranks[0], rank2 = ranks[1], rank3 = ranks[2];
+  const vaHiIdx = Math.max(rank1, rank2, rank3);
+  const vaLoIdx = Math.min(rank1, rank2, rank3);
+  const vaHi   = bHi[vaHiIdx];
+  const vaLo   = bLo[vaLoIdx];
+  const vaMTP  = bMTP[rank1];
+
+  const cmp = closes[n - 1];
+  let curBand = 0;
+  for (let i = 0; i < NB; i++) { if (cmp >= bLo[i] && cmp <= bHi[i]) { curBand = i; break; } }
+
+  const rejHi = NB - 1, rejLo1 = 0, rejLo2 = 1;
+  let bandZone;
+  if      (curBand === rejHi)                              bandZone = 'rej_hi';
+  else if (curBand >= vaLoIdx && curBand <= vaHiIdx)       bandZone = 'va';
+  else if (curBand > vaHiIdx)                              bandZone = 'above_va';
+  else if (curBand === rejLo1 || curBand === rejLo2)       bandZone = 'rej_lo';
+  else                                                     bandZone = 'below_va';
+
+  const prevCmp = closes[n - 2] !== undefined ? closes[n - 2] : cmp;
+  let prevBand = 0;
+  for (let i = 0; i < NB; i++) { if (prevCmp >= bLo[i] && prevCmp <= bHi[i]) { prevBand = i; break; } }
+  const dirArrow = curBand > prevBand ? '▲' : curBand < prevBand ? '▼' : '~';
+  const totBars  = bBars.reduce((s, v) => s + v, 0) || 1;
+
+  return {
+    NB, bLo, bHi, bBars, bMTP, ranks, rank1, rank2, rank3,
+    vaHiIdx, vaLoIdx, vaHi, vaLo, vaMTP,
+    curBand, prevBand, dirArrow, rejHi, rejLo1, rejLo2,
+    bandZone, hiDyn, loDyn, totBars,
+    curBandLo: bLo[curBand], curBandHi: bHi[curBand],
+    b1Lo: bLo[0], b1Hi: bHi[0],
+    b10Lo: bLo[NB-1], b10Hi: bHi[NB-1],
+    zone: bandZone,
+  };
 }
 
-function calcAllBands(closes) {
-  const result = {};
-  BAND_LOOKBACKS.forEach(lb => {
-    const bd = calcBandAtLB(closes, lb);
-    if(bd) result[lb] = bd;
-  });
-  return result;
-}
-
-// Zone agreement scoring — how many lookbacks agree on direction?
-function zoneConcordance(allBands) {
-  if(!allBands || !Object.keys(allBands).length) return {score:0, agreement:'none', detail:{}};
-  const zones = Object.values(allBands).map(b=>b.zone);
-  const isBuyZone  = z => z==='rej_lo'||z==='below_va';
-  const isSellZone = z => z==='rej_hi'||z==='above_va';
-  const buyCount  = zones.filter(isBuyZone).length;
-  const sellCount = zones.filter(isSellZone).length;
-  const vaCount   = zones.filter(z=>z==='va').length;
-  const total     = zones.length;
-  let score = 0, agreement = 'conflict';
-  if(buyCount===total)       { score=20; agreement='strong_buy'; }
-  else if(buyCount>=3)       { score=14; agreement='buy'; }
-  else if(buyCount===2)      { score=8;  agreement='lean_buy'; }
-  else if(sellCount===total) { score=20; agreement='strong_sell'; }
-  else if(sellCount>=3)      { score=14; agreement='sell'; }
-  else if(sellCount===2)     { score=8;  agreement='lean_sell'; }
-  else if(vaCount>=3)        { score=0;  agreement='neutral'; }
-  else                       { score=-4; agreement='conflict'; }
-  const detail = {};
-  BAND_LOOKBACKS.forEach(lb=>{if(allBands[lb])detail[lb]=allBands[lb].zone});
-  return {score, agreement, detail, buyCount, sellCount, vaCount};
+// ── IRAVAT-exact calcTpSl (band-anchored) ──
+function calcTpSl(sig, cmp, atr, bd) {
+  if (!bd) return { tp: null, sl: null };
+  let tp = null, sl = null;
+  if (sig.startsWith('B')) {
+    tp = bd.vaMTP;
+    if (tp <= cmp) tp = bd.b10Hi;
+    sl = bd.bandZone === 'rej_lo' ? bd.b1Lo - atr * 0.3 : bd.curBandLo - atr * 0.2;
+  } else if (sig.startsWith('S')) {
+    tp = bd.vaMTP;
+    if (tp >= cmp) tp = bd.b1Lo;
+    sl = bd.bandZone === 'rej_hi' ? bd.b10Hi + atr * 0.3 : bd.curBandHi + atr * 0.2;
+  }
+  const rnd = v => v ? Math.round(v * 100) / 100 : null;
+  return { tp: rnd(tp), sl: rnd(sl) };
 }
 
 function detectSALT(h9arr, h10arr, smiArr, smiSigArr, bandZone) {
@@ -1432,91 +1466,74 @@ async function processAll(bySymbol) {
     const n=closes.length-1;
     if(h9[n]===null||h10[n]===null)continue;
 
-    // Multi-lookback band zones
-    const allBands = calcAllBands(closes);
-    const primaryLB = getBandLB();
-    const bd60 = allBands[primaryLB] || allBands[100] || allBands[60] || allBands[250] || allBands[30];
-    const bandZone = bd60 ? bd60.zone : 'va';
-    const concord = zoneConcordance(allBands);
-    const concordanceScore = concord.score;
+    // ── Band zone — single calc, exact IRAVAT ──
+    const bd = calcBands(closes);
+    if (!bd) continue;
+    const bandZone = bd.bandZone;
 
-    // Signal
-    const signal=detectSALT(h9,h10,smi,smiSig,bandZone);
-    if(signal==='WAIT')continue;
+    // ── Signal — exact IRAVAT ──
+    const signal = detectSALT(h9, h10, smi, smiSig, bandZone);
+    if (signal === 'WAIT') continue;
 
-    // HVP
+    // ── HVP (NANDI extra — kept) ──
     const hvLast=hvs[n]||15;
     const hvArr=hvs.filter(v=>v!==null);
     const hvMax=hvArr.length?Math.max(...hvArr):hvLast*1.5;
     const hvMin=hvArr.length?Math.min(...hvArr):hvLast*0.5;
     const hvp=hvMax>hvMin?Math.round((hvLast-hvMin)/(hvMax-hvMin)*100):50;
 
-    // TP/SL
-    const cmp=closes[n], atr=atrs[n]||cmp*0.02;
-    let tp,sl,tpSlSource='PCT';
-    const learned=getLearnedTPSL(sym,cmp,atr);
-    if(learned){tp=learned.tp;sl=learned.sl;tpSlSource=learned.source}
-    else if(signal.startsWith('B')){
-      tp=parseFloat((cmp*(1+PCT_TP)).toFixed(2));
-      sl=parseFloat((cmp*(1-PCT_SL)).toFixed(2));
-    } else {
-      tp=parseFloat((cmp*(1-PCT_TP)).toFixed(2));
-      sl=parseFloat((cmp*(1+PCT_SL)).toFixed(2));
+    // ── TP/SL — band-anchored, exact IRAVAT ──
+    const cmp = closes[n], atr = atrs[n] || cmp * 0.02;
+    let tpsl = calcTpSl(signal, cmp, atr, bd);
+    let tp = tpsl.tp, sl = tpsl.sl, tpSlSource = 'BAND';
+    // Learned override (NANDI intelligence layer — kept on top)
+    const learned = getLearnedTPSL(sym, cmp, atr);
+    if (learned) { tp = learned.tp; sl = learned.sl; tpSlSource = learned.source; }
+    // Fallback to PCT if band calc failed
+    if (!tp || !sl) {
+      if (signal.startsWith('B')) { tp = parseFloat((cmp*(1+PCT_TP)).toFixed(2)); sl = parseFloat((cmp*(1-PCT_SL)).toFixed(2)); }
+      else { tp = parseFloat((cmp*(1-PCT_TP)).toFixed(2)); sl = parseFloat((cmp*(1+PCT_SL)).toFixed(2)); }
+      tpSlSource = 'PCT';
     }
-    const rr=atr>0?parseFloat((Math.abs(tp-cmp)/Math.abs(cmp-sl)).toFixed(2)):1;
+    const rr = sl > 0 ? parseFloat((Math.abs(tp-cmp)/Math.abs(cmp-sl)).toFixed(2)) : 1;
 
-    // Per-stock weekly trend (exact IRAVAT) + barsAgo freshness
-    const secBrd=sectorBreadth[info.sector]||{pct:50};
-    const weeklyTrend=calcWeeklyTrend(info.rows);
-    const barsAgo=calcBarsAgo(h9,h10,smi,smiSig,bandZone,signal);
+    // ── Weekly trend per-stock + barsAgo — exact IRAVAT ──
+    const weeklyTrend = calcWeeklyTrend(info.rows);
+    const barsAgo     = calcBarsAgo(h9, h10, smi, smiSig, bandZone, signal);
 
-    // Previous signal from ledger index
-    const prevSig=prevSigMap[sym]||null;
+    // ── Score — exact IRAVAT calcScore ──
+    const score = calcScore(signal, bandZone, barsAgo, weeklyTrend, rr);
 
-    // Score
-    const ret250=stockReturns[sym]?stockReturns[sym].ret_250:null;
-    const score=calcScore(signal,bandZone,barsAgo,weeklyTrend,rr);
+    // ── NANDI intelligence layer (kept) ──
+    const secBrd    = sectorBreadth[info.sector] || {pct:50};
+    const prevSig   = prevSigMap[sym] || null;
+    const ret250    = stockReturns[sym] ? stockReturns[sym].ret_250 : null;
+    const nseiCorr  = corrData[sym] ? corrData[sym]['NSEI'] || corrData[sym]['CRSLDX'] || null : null;
+    const seqWR     = getSeqWR(prevSig, signal);
+    const kelly     = getKelly(sym);
+    const learnedWR = getLearntWR(signal, mktRegime, secBrd.pct, hvp);
+    const earnProx  = checkEarningProximity(sym, rows[n].date, 15);
+    const mbSc      = computeMBScore(sym, bySymbol);
 
-    // NSEI corr
-    const nseiCorr=corrData[sym]?corrData[sym]['NSEI']||corrData[sym]['CRSLDX']||null:null;
-
-    // Seq WR
-    const seqWR=getSeqWR(prevSig,signal);
-
-    // Kelly
-    const kelly=getKelly(sym);
-
-    // Learned WR
-    const learnedWR=getLearntWR(signal,mktRegime,secBrd.pct,hvp);
-
-    // Earnings proximity
-    const lastDate=rows[n].date;
-    const earnProx=checkEarningProximity(sym,lastDate,15);
-
-    // MB score
-    const mbSc=computeMBScore(sym,bySymbol);
-
-    const sigObj={
-      symbol:sym,sector:info.sector,index:info.index,
-      signal,score,band_zone:bandZone,
-      band_30:allBands[30]?allBands[30].zone:null,
-      band_60:allBands[60]?allBands[60].zone:null,
-      band_100:allBands[100]?allBands[100].zone:null,
-      band_250:allBands[250]?allBands[250].zone:null,
-      band_primary:allBands[primaryLB]?allBands[primaryLB].zone:bandZone,
-      concordance:concord.agreement,concordance_score:concordanceScore,
+    const sigObj = {
+      symbol:sym, sector:info.sector, index:info.index,
+      signal, score, band_zone:bandZone,
+      // band columns kept for table display (all same value now — primary LB)
+      band_30:bandZone, band_60:bandZone, band_100:bandZone, band_250:bandZone,
+      band_primary:bandZone,
       wr_lookup:WR_LOOKUP[signal+'|'+bandZone]||null,
       breakeven_wr:BREAKEVEN_WR,
-      is_good_combo:(signal.startsWith('B')?GOOD_BUY:GOOD_SELL)[signal+'|'+bandZone]||false,hvp,
-      regime:mktRegime,breadth_pct:secBrd.pct,
-      market_breadth:mktBreadthPct,
-      cmp,tp,sl,rr,atr_entry:parseFloat(atr.toFixed(2)),
+      is_good_combo:(signal.startsWith('B')?GOOD_BUY:GOOD_SELL)[signal+'|'+bandZone]||false,
+      hvp, regime:mktRegime, breadth_pct:secBrd.pct, market_breadth:mktBreadthPct,
+      cmp, tp, sl, rr, atr_entry:parseFloat(atr.toFixed(2)),
       tpsl_source:tpSlSource,
       entry_date:rows[n].date,
-      kelly_pct:kelly,learnedWR,seqWR,prev_signal:prevSig,
-      nsei_corr:nseiCorr,mb_score:mbSc,
-      earn_prox:earnProx,best_indicator:globalBestInd,
-      ret_250:stockReturns[sym]?stockReturns[sym].ret_250:null
+      kelly_pct:kelly, learnedWR, seqWR, prev_signal:prevSig,
+      nsei_corr:nseiCorr, mb_score:mbSc,
+      earn_prox:earnProx, best_indicator:globalBestInd,
+      ret_250:ret250,
+      // IRAVAT extras — used for display
+      weeklyTrend, barsAgo, weeklyAligned:(signal.startsWith('B')&&weeklyTrend==='bull')||(signal.startsWith('S')&&weeklyTrend==='bear'),
     };
     allSignals.push(sigObj);
 
@@ -2291,7 +2308,8 @@ function renderTop25() {
     const idealFlag=s.score>=thr?'★ ':'';
     const histWR=s.wr_lookup!==null&&s.wr_lookup!==undefined?s.wr_lookup+'%':'—';
     const wrCls=s.wr_lookup>=75?'c-bull':s.wr_lookup>=68?'c-amb':'c-bear';
-    const concBadge2=concordBadge(s.concordance);
+    const wkCls2=s.weeklyAligned?'b-bull':s.weeklyTrend==='bear'?'b-bear':'b-dim';
+    const concBadge2=`<span class="b ${wkCls2}">${(s.weeklyTrend||'neut').toUpperCase()}</span>`;
     return`<tr class="${sigClass(s.signal)}">
       <td class="c-dim">${idealFlag}${i+1}</td>
       <td>${goodFlag}<strong>${s.symbol}</strong></td>
@@ -2375,7 +2393,8 @@ function applyFilters() {
   const thr2=getRegimeThreshold();
   tbody.innerHTML=sigFiltered.slice(0,500).map(s=>{
     const earn=s.earn_prox?'<span class="b b-pink">⚡EARN</span>':'';
-    const concBadge=concordBadge(s.concordance);
+    const wkCls=s.weeklyAligned?'b-bull':s.weeklyTrend==='bear'?'b-bear':'b-dim';
+    const concBadge=`<span class="b ${wkCls}">${(s.weeklyTrend||'neut').toUpperCase()}</span>`;
     const scoreCls2=s.score>=thr2?'c-bull':s.score>=(thr2-15)?'c-amb':'c-dim';
     return`<tr class="${sigClass(s.signal)}${s.earn_prox?' earn':''}">
       <td><strong>${s.symbol}</strong></td>
