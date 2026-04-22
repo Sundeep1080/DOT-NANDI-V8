@@ -1149,7 +1149,44 @@ function buildKellyData() {
 }
 function getKelly(sym){return kellyData[sym]?kellyData[sym].kelly_pct:null}
 
-// ── IRAVAT-exact calcScore (0-100) ──
+// ── IRAVAT-exact per-stock weekly trend ──
+function calcWeeklyTrend(rows) {
+  if (rows.length < 30) return 'neut';
+  const weeks = {};
+  rows.forEach(r => {
+    const d = new Date(r.date);
+    const mon = new Date(d); mon.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    const key = mon.toISOString().slice(0, 10);
+    if (!weeks[key]) weeks[key] = [];
+    weeks[key].push(r.cl);
+  });
+  const wClose = Object.keys(weeks).sort().map(k => weeks[k][weeks[k].length - 1]);
+  if (wClose.length < 12) return 'neut';
+  const wh9  = calcHMA(wClose, 9);
+  const wh10 = calcHMA(wClose, 10);
+  const ni   = wClose.length - 1;
+  const c9 = wh9[ni], c10 = wh10[ni];
+  if (c9 === null || c10 === null) return 'neut';
+  return c9 > c10 ? 'bull' : c9 < c10 ? 'bear' : 'neut';
+}
+
+// ── IRAVAT-exact calcBarsAgo ──
+function calcBarsAgo(h9arr, h10arr, smiArr, smiSigArr, bandZone, currentSig) {
+  const n = h9arr.length - 1;
+  for (let ago = 0; ago <= 10; ago++) {
+    if (n - ago < 2) break;
+    const subH9  = h9arr.slice(0, n - ago + 1);
+    const subH10 = h10arr.slice(0, n - ago + 1);
+    const subSMI = smiArr.slice(0, n - ago + 1);
+    const subSIG = smiSigArr.slice(0, n - ago + 1);
+    const sig = detectSALT(subH9, subH10, subSMI, subSIG, bandZone);
+    if (ago === 0) { if (sig !== currentSig) return 99; }
+    else if (sig !== currentSig) return ago - 1;
+  }
+  return 10;
+}
+
+
 // Same 5 dimensions as IRAVAT: signal type + band zone + freshness + weekly + R:R
 // barsAgo: 0 = fired today (freshest), 99 = stale
 function calcScore(sig, bandZone, barsAgo, weeklyTrend, rr) {
@@ -1428,16 +1465,17 @@ async function processAll(bySymbol) {
     }
     const rr=atr>0?parseFloat((Math.abs(tp-cmp)/Math.abs(cmp-sl)).toFixed(2)):1;
 
-    // Sector breadth
+    // Per-stock weekly trend (exact IRAVAT) + barsAgo freshness
     const secBrd=sectorBreadth[info.sector]||{pct:50};
-    const weeklyTrend=weeklyTrendBySec[info.sector]||'flat';
+    const weeklyTrend=calcWeeklyTrend(info.rows);
+    const barsAgo=calcBarsAgo(h9,h10,smi,smiSig,bandZone,signal);
 
     // Previous signal from ledger index
     const prevSig=prevSigMap[sym]||null;
 
     // Score
     const ret250=stockReturns[sym]?stockReturns[sym].ret_250:null;
-    const score=adaptiveScore(signal,prevSig,mktRegime,secBrd.pct,hvp,rr,weeklyTrend,rows[n].date,sym,globalBestInd,bandZone,ret250,concordanceScore);
+    const score=calcScore(signal,bandZone,barsAgo,weeklyTrend,rr);
 
     // NSEI corr
     const nseiCorr=corrData[sym]?corrData[sym]['NSEI']||corrData[sym]['CRSLDX']||null:null;
