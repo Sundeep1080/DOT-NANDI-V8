@@ -1149,71 +1149,48 @@ function buildKellyData() {
 }
 function getKelly(sym){return kellyData[sym]?kellyData[sym].kelly_pct:null}
 
-// ADAPTIVE SCORE (all layers combined)
-// ── IRAVAT-aligned base score (deterministic, 0-90)
-function baseScore(sig, bandZone, weeklyTrend, hvp, rr, concordanceScore) {
-  let s = 0;
+// ── IRAVAT-exact calcScore (0-100) ──
+// Same 5 dimensions as IRAVAT: signal type + band zone + freshness + weekly + R:R
+// barsAgo: 0 = fired today (freshest), 99 = stale
+function calcScore(sig, bandZone, barsAgo, weeklyTrend, rr) {
+  let score = 0;
+
   // 1. Signal type (0-30)
-  const sigS = {'B1-OS':28,'B1-MOM':22,'B2':30,'B3':10,
-                 'S1-OB':28,'S1-MOM':22,'S2':30,'S3':10};
-  s += sigS[sig] || 0;
-  // 2. Primary band zone — 100d (quarterly range, best balance)
-  // KEY: below_va beats rej_lo for BUY (rej_lo = downtrend trap, WR 51%)
-  //      rej_hi beats above_va for SELL (above_va = weak signal zone)
-  const isBuy2=sig.startsWith('B'), isSell2=sig.startsWith('S');
-  const zS_buy  = {'below_va':25,'va':15,'rej_lo':5,'above_va':0,'rej_hi':0};
-  const zS_sell = {'rej_hi':25,'above_va':18,'va':10,'below_va':0,'rej_lo':0};
-  s += (isBuy2 ? zS_buy[bandZone] : zS_sell[bandZone]) || 0;
-  // 3. Multi-lookback concordance bonus (0-20)
-  s += concordanceScore || 0;
+  const sigScore = {'B1-OS':28,'B1-MOM':25,'B2':30,'B3':10,
+                    'S1-OB':28,'S1-MOM':25,'S2':30,'S3':10,
+                    'HSE':5,'HLE':5,'SE':8,'LE':8};
+  score += sigScore[sig] || 0;
+
+  // 2. Band zone (0-25) — exact IRAVAT weights
+  const zScore = {'rej_lo':25,'rej_hi':25,'below_va':15,'above_va':15,'va':5};
+  score += zScore[bandZone] || 0;
+
+  // 3. Freshness / bars-ago (0-20)
+  if      (barsAgo === 0) score += 20;
+  else if (barsAgo === 1) score += 15;
+  else if (barsAgo === 2) score += 10;
+  else if (barsAgo <= 4)  score += 4;
+
   // 4. Weekly trend alignment (0-15)
   const isBuy = sig.startsWith('B'), isSell = sig.startsWith('S');
-  if((isBuy&&weeklyTrend==='bull')||(isSell&&weeklyTrend==='bear')) s += 15;
-  else if(weeklyTrend==='flat') s += 5;
-  // 5. HVP (0-10)
-  if(hvp>=75) s+=10; else if(hvp>=60) s+=7; else if(hvp>=45) s+=4; else if(hvp>=30) s+=2;
-  // 6. R:R (0-10)
-  const rrN=parseFloat(rr)||0;
-  if(rrN>=3.0) s+=10; else if(rrN>=2.0) s+=7; else if(rrN>=1.5) s+=4; else if(rrN>=1.0) s+=2;
-  return s;
-  // max = 30+25+20+15+10+10 = 110 → capped at 100 in adaptiveScore
+  if ((isBuy  && weeklyTrend === 'bull') ||
+      (isSell && weeklyTrend === 'bear')) score += 15;
+  else if (weeklyTrend === 'neut' || weeklyTrend === 'flat') score += 5;
+
+  // 5. R:R (0-10)
+  const rrN = parseFloat(rr) || 0;
+  if      (rrN >= 3.0) score += 10;
+  else if (rrN >= 2.0) score += 7;
+  else if (rrN >= 1.5) score += 4;
+  else if (rrN >= 1.0) score += 2;
+
+  return Math.min(100, score);
 }
 
+// Keep adaptiveScore as a thin wrapper so ledger/portfolio code that calls it still works
 function adaptiveScore(sig, prevSig, regime, breadthPct, hvp, rr, weeklyTrend, currentDate, sym, bestInd, bandZone, ret250, concordanceScore) {
-  // LAYER 0: deterministic base (0-110, same logic as IRAVAT + concordance)
-  let score = baseScore(sig, bandZone, weeklyTrend, hvp, rr, concordanceScore);
-
-  // LAYER 1: Context WR bonus (self-learning, 0-10)
-  const ctx = contextWRMap[buildCtxKey(sig, regime||'flat', getBkt(breadthPct||50,40,60), getBkt(hvp||50,30,60))];
-  if(ctx && ctx.n >= 3) score += ctx.wr>=70?10 : ctx.wr>=60?5 : ctx.wr>=50?2 : -5;
-
-  // LAYER 2: Signal sequence bonus (self-learning, -5 to +8)
-  score += getSeqBonus(prevSig, sig);
-
-  // LAYER 3: Regime transition discount
-  const discount = getRegimeTransitionDiscount(currentDate);
-  score = Math.round(score * discount);
-
-  // LAYER 4: Stock indicator preference (+5)
-  score += getIndBonus(sym, bestInd);
-
-  // LAYER 5: 250d momentum bonus (+0 to +5)
-  const isBuy = sig.startsWith('B'), isSell = sig.startsWith('S');
-  if(ret250 !== null && ret250 !== undefined) {
-    if(isBuy  && ret250 >= 50)       score += 5;
-    else if(isBuy  && ret250 >= 20)  score += 3;
-    else if(isBuy  && ret250 < -30)  score -= 3;
-    else if(isSell && ret250 <= -20) score += 5;
-    else if(isSell && ret250 <= -5)  score += 3;
-  }
-
-  return Math.min(100, Math.max(0, Math.round(score)));
-  // Max = 90 (base) + 10 (ctx) + 8 (seq) + 5 (indpref) + 5 (ret) = 118 → capped 100
-  // Score bands:
-  // 85-100 = IDEAL — B1-OS/B2 in rej zone, trend aligned, strong RR
-  // 70-84  = GOOD  — worth trading at normal size
-  // 55-69  = FAIR  — reduce size, confirm with regime
-  // <55    = SKIP  — B3/VA or against trend
+  // Use IRAVAT calcScore — barsAgo always 0 here (current bar), freshness = max
+  return calcScore(sig, bandZone, 0, weeklyTrend, rr);
 }
 function getLearntWR(sig,regime,bPct,hvp){
   const ctx=contextWRMap[buildCtxKey(sig,regime||'flat',getBkt(bPct||50,40,60),getBkt(hvp||50,30,60))];
