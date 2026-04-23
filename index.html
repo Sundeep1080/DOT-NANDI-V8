@@ -326,7 +326,7 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
           <button class="btn btn-d" style="font-size:8px;padding:2px 7px" onclick="sortTop25('buy','rr')">R:R</button>
         </div>
       </div>
-      <div class="tw"><table id="top25BuyTbl"><thead><tr><th>#</th><th>Symbol</th><th>Sig</th><th>Score</th><th>Concord</th><th id="thTop25BuyZone">100d Zone</th><th>HVP</th><th>CMP</th><th>TP Target</th><th>TP%</th><th>SL Stop</th><th>R:R</th><th>HistWR%</th><th>Kelly%</th><th>250d</th></tr></thead><tbody id="top25BuyBody"></tbody></table></div>
+      <div class="tw"><table id="top25BuyTbl"><thead><tr><th>#</th><th>Symbol</th><th>Sig</th><th>Score</th><th>Concord</th><th id="thTop25BuyZone">100d Zone</th><th>HVP</th><th>CMP</th><th>TP +2.0%</th><th>SL -3.5%</th><th>R:R</th><th>HistWR%</th><th>Kelly%</th><th>250d</th></tr></thead><tbody id="top25BuyBody"></tbody></table></div>
     </div>
     <div class="top25-panel">
       <div class="top25-hdr bear">
@@ -337,7 +337,7 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
           <button class="btn btn-d" style="font-size:8px;padding:2px 7px" onclick="sortTop25('sell','rr')">R:R</button>
         </div>
       </div>
-      <div class="tw"><table id="top25SellTbl"><thead><tr><th>#</th><th>Symbol</th><th>Sig</th><th>Score</th><th>Concord</th><th id="thTop25SellZone">100d Zone</th><th>HVP</th><th>CMP</th><th>TP Target</th><th>TP%</th><th>SL Stop</th><th>R:R</th><th>HistWR%</th><th>Kelly%</th><th>250d</th></tr></thead><tbody id="top25SellBody"></tbody></table></div>
+      <div class="tw"><table id="top25SellTbl"><thead><tr><th>#</th><th>Symbol</th><th>Sig</th><th>Score</th><th>Concord</th><th id="thTop25SellZone">100d Zone</th><th>HVP</th><th>CMP</th><th>TP +2.0%</th><th>SL -3.5%</th><th>R:R</th><th>HistWR%</th><th>Kelly%</th><th>250d</th></tr></thead><tbody id="top25SellBody"></tbody></table></div>
     </div>
   </div>
   <div class="insights-strip" id="insightStrip" style="display:none"></div>
@@ -375,7 +375,7 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
         <th onclick="sortSig('band_250')">250d</th>
         <th onclick="sortSig('hvp')">HVP</th>
         <th onclick="sortSig('cmp')">CMP</th>
-        <th onclick="sortSig('tp')" title="Band-anchored target (Value Area Midpoint or next band high)">TP ▸</th>
+        <th onclick="sortSig('tp')">TP</th>
         <th onclick="sortSig('sl')">SL</th>
         <th onclick="sortSig('rr')">R:R</th>
         <th onclick="sortSig('kelly_pct')">Kelly%</th>
@@ -393,14 +393,14 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
   <div class="card" style="margin-bottom:8px">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
       <div class="ct"><i class="fas fa-layer-group"></i> Daily Portfolio Engine
-        <span style="font-family:var(--mono);font-size:8px;color:var(--text2);font-weight:400;margin-left:6px">Mon→Fri · Tue→Mon · Wed→Tue · Thu→Wed · Fri→Mon</span>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--text2);font-weight:400;margin-left:6px">Mon→Fri · Tue→Mon · Wed→Tue · Thu→Wed · Fri→Thu</span>
       </div>
       <div class="btn-row">
         <label style="font-family:var(--mono);font-size:9px;color:var(--text2)">Capital ₹</label>
         <input class="fi" id="pfCapital" value="500000" style="width:100px">
         <label style="font-family:var(--mono);font-size:9px;color:var(--text2)">Min score</label>
         <input class="fi" id="pfMinScore" value="55" style="width:55px" title="Regime auto-enforces minimum. Breakeven WR=63.6% with TP=2% SL=3.5%">
-        <button class="btn btn-a" onclick="createDailyPortfolios()"><i class="fas fa-clock"></i> Create Today's Portfolios <span style="font-size:8px;opacity:.7">(3–3:30pm)</span></button>
+        <button class="btn btn-a" onclick="createDailyPortfolios()"><i class="fas fa-plus"></i> Create Today's Portfolios</button>
         <button class="btn btn-g" onclick="updateDPFPnL()"><i class="fas fa-sync"></i> Update P&L</button>
         <button class="btn btn-r" onclick="dissolvePortfolios()"><i class="fas fa-check-circle"></i> Dissolve Expired</button>
       </div>
@@ -588,7 +588,7 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
       <strong class="c-bull">💡 OPTIMAL SETTING: TP=2.0% SL=3.5%</strong> — RR 1:1.75, breakeven WR=63.6%.<br>
       Best combo: B2×below_va (74% WR, +0.55% EV) and B3×below_va (72% WR, +0.47% EV).<br>
       ⚠️ AVOID buy signals in rej_lo zone — despite appearing oversold, WR drops to 51-57% (negative EV).<br>
-      700 stocks generate ~250 buy signals daily → Top 25 easily filled. Filter: below_va and va zones. B1-MOM: ONLY take in rej_lo zone (73% WR). B1-MOM×below_va = 47% WR → AVOID (shown in All Signals but excluded from EV+ Top 25).
+      700 stocks generate ~250 buy signals daily → Top 25 easily filled. Filter: only below_va and va zones.
     </div>
   </div>
 
@@ -1897,56 +1897,14 @@ function createDailyPortfolios() {
   if(existing){toast('Portfolio for '+dayInfo.dayName+' '+dayInfo.createdDate+' already exists','info');renderPage2();return}
 
   // Filter + sort by score
-  const buys=allSignals.filter(s=>s.signal.startsWith('B')&&s.score>=minScore).sort((a,b)=>top25Sort(a,b,'score'));
-  const sells=allSignals.filter(s=>s.signal.startsWith('S')&&s.score>=minScore).sort((a,b)=>top25Sort(a,b,'score'));
+  // SAME selection as Top 25 — the 25 stocks you see ARE the portfolio
+  const buys = selectTop25(allSignals, 'buy');
+  const sells = selectTop25(allSignals, 'sell');
 
-  // ── Zone quality filter + sector diversification ──
-  // Data shows: below_va and va are the only profitable zones for buys
-  // rej_lo appears oversold but has 51-57% WR — negative EV
-  function zoneQuality(s) {
-    const isBuy=s.signal.startsWith('B');
-    if(isBuy) {
-      // B1-MOM ONLY has positive EV in rej_lo zone (73.3% WR)
-      // B1-MOM in below_va = 47.4% WR — BELOW breakeven — exclude from portfolio
-      if(s.signal==='B1-MOM') {
-        if(s.band_60==='rej_lo') return 3;  // 73.3% WR — GOOD
-        return 0;  // all other zones: negative EV for B1-MOM
-      }
-      if(s.band_60==='below_va') return 3;  // best for B2/B3/B1-OS
-      if(s.band_60==='va')       return 2;  // good
-      if(s.band_60==='rej_lo')   return 1;  // risky for B2/B3 — 57% WR
-      return 0;
-    } else {
-      if(s.band_60==='rej_hi')   return 3;
-      if(s.band_60==='above_va') return 2;
-      if(s.band_60==='va')       return 2;
-      // S1-OB only has bad WR — below breakeven in all zones except rej_hi
-      if(s.signal==='S1-OB'&&s.band_60!=='rej_hi') return 0;
-      return 1;
-    }
-  }
-  function diversify(list, maxPerSector, maxTotal) {
-    // Sort: zone quality first, then score
-    const sorted=list.slice().sort((a,b)=>{
-      const zq=zoneQuality(b)-zoneQuality(a);
-      if(zq!==0) return zq;
-      return b.score-a.score;
-    });
-    const sectorCt={};
-    const result=[];
-    for(const s of sorted){
-      const sc=s.sector||'Other';
-      if(!sectorCt[sc])sectorCt[sc]=0;
-      if(sectorCt[sc]>=maxPerSector) continue;
-      sectorCt[sc]++;
-      result.push(s);
-      if(result.length>=maxTotal) break;
-    }
-    return result;
-  }
-  const buyList=diversify(buys, 3, 25);
-  const sellList=diversify(sells, 3, 25);
 
+  // buyList and sellList come from selectTop25 above
+  const buyList = buys;
+  const sellList = sells;
   if(buyList.length===0&&sellList.length===0){
     toast('No signals above score '+minScore+' (regime: '+overallRegime+'). Lower threshold or wait for better setups.','err');
     return;
@@ -1984,7 +1942,8 @@ function createDailyPortfolios() {
       id:'BUY_'+dayInfo.createdDate,type:'buy',day:dayInfo.dayName,
       createdDate:dayInfo.createdDate,dissolveDate:dayInfo.dissolveDate,dissolveDay:dayInfo.dissolveDay,
       status:'active',capital,stocks,totalPnl:0,totalPnlPct:0,winCount:0,lossCount:0,
-      avgScore,sectors,minScoreUsed:minScore,regimeAtCreation:overallRegime
+      avgScore,sectors,minScoreUsed:minScore,regimeAtCreation:overallRegime,
+      selectionMethod:'Top25 EV+ unified',holdDays:4
     });
     toast('BUY: '+buyList.length+' stocks across '+sectors.length+' sectors · '+dayInfo.dayName+' → dissolves '+dayInfo.dissolveDay,'ok');
   }
@@ -2004,7 +1963,8 @@ function createDailyPortfolios() {
       id:'SELL_'+dayInfo.createdDate,type:'sell',day:dayInfo.dayName,
       createdDate:dayInfo.createdDate,dissolveDate:dayInfo.dissolveDate,dissolveDay:dayInfo.dissolveDay,
       status:'active',capital,stocks,totalPnl:0,totalPnlPct:0,winCount:0,lossCount:0,
-      avgScore,sectors,minScoreUsed:minScore,regimeAtCreation:overallRegime
+      avgScore,sectors,minScoreUsed:minScore,regimeAtCreation:overallRegime,
+      selectionMethod:'Top25 EV+ unified',holdDays:4
     });
     toast('SELL: '+sellList.length+' stocks across '+sectors.length+' sectors → see Options tab','ok');
   }
@@ -2285,6 +2245,51 @@ function top25Sort(a, b, col) {
   return rb - ra;
 }
 
+
+// ─── UNIFIED SELECTION: same logic for Top 25 display AND daily portfolio ───
+// This ensures the 25 stocks you see are exactly the ones in your portfolio
+function selectTop25(signals, type) {
+  // type = 'buy' or 'sell'
+  const isBuy = type === 'buy';
+  const regThr = getRegimeThreshold();
+
+  // Step 1: filter — must be EV-positive (is_good_combo) OR very high score
+  const qualified = signals.filter(function(s) {
+    if(isBuy && !s.signal.startsWith('B')) return false;
+    if(!isBuy && !s.signal.startsWith('S')) return false;
+    // EV-positive combo: always include
+    if(s.is_good_combo) return true;
+    // High score override: include even if not a studied combo
+    if(s.score >= regThr + 10) return true;
+    // B1-OS and B1-MOM only if is_good_combo (their below_va WR is below breakeven)
+    if(s.signal === 'B1-MOM' || s.signal === 'B1-OS') return false;
+    // S1-OB only if is_good_combo
+    if(s.signal === 'S1-OB') return false;
+    // Others (B2, B3, S2, S3) need score >= regime threshold
+    return s.score >= regThr;
+  });
+
+  // Step 2: sort — EV+ combos first, then by score desc
+  qualified.sort(function(a, b) {
+    if(a.is_good_combo && !b.is_good_combo) return -1;
+    if(!a.is_good_combo && b.is_good_combo) return 1;
+    return b.score - a.score;
+  });
+
+  // Step 3: diversify — max 3 per sector, max 25 total
+  var sectorCt = {};
+  var result = [];
+  for(var i = 0; i < qualified.length; i++) {
+    var s = qualified[i];
+    var sec = s.sector || 'Other';
+    if(!sectorCt[sec]) sectorCt[sec] = 0;
+    if(sectorCt[sec] >= 3) continue;
+    sectorCt[sec]++;
+    result.push(s);
+    if(result.length >= 25) break;
+  }
+  return result;
+}
 function renderTop25() {
   const thr = getRegimeThreshold();
   // Good combos first, then rest — always show 25 regardless
@@ -2295,8 +2300,12 @@ function renderTop25() {
       return top25Sort(a,b,col);
     });
   }
-  const buys=sortWithGood(allSignals.filter(s=>s.signal.startsWith('B')),top25SortBuy).slice(0,25);
-  const sells=sortWithGood(allSignals.filter(s=>s.signal.startsWith('S')),top25SortSell).slice(0,25);
+  // Use unified selection — same stocks as daily portfolio
+  const buys = selectTop25(allSignals, 'buy');
+  const sells = selectTop25(allSignals, 'sell');
+  // Also re-sort by user's chosen column if not score
+  if(top25SortBuy !== 'score') buys.sort(function(a,b){return top25Sort(a,b,top25SortBuy)});
+  if(top25SortSell !== 'score') sells.sort(function(a,b){return top25Sort(a,b,top25SortSell)});
 
   // Update header threshold hint
   ['Buy','Sell'].forEach(t=>{
@@ -2309,8 +2318,7 @@ function renderTop25() {
   });
   const row=(s,i)=>{
     const kStr=s.kelly_pct!==null?s.kelly_pct+'%':'—';
-    const goodFlag=s.is_good_combo?'<span class="b b-bull" style="font-size:7px">EV+</span> '
-      :(s.signal==='B1-MOM'&&(s.band_primary||s.band_60)!=='rej_lo'?'<span class="b b-bear" style="font-size:7px">EV-</span> ':'');
+    const goodFlag=s.is_good_combo?'<span class="b b-bull" style="font-size:7px">EV+</span> ':'';
     const retStr=s.ret_250!==null?(s.ret_250>0?'+':'')+s.ret_250+'%':'—';
     const bz=bandZoneBadge(s.band_primary||s.band_100||s.band_60||s.band_zone);
     const scoreCls=s.score>=thr?'c-bull':s.score>=(thr-15)?'c-amb':'c-dim';
@@ -2329,7 +2337,6 @@ function renderTop25() {
       <td><span class="${s.hvp>60?'c-bull':s.hvp<35?'c-bear':'c-amb'}">${s.hvp}</span></td>
       <td>₹${s.cmp.toFixed(1)}</td>
       <td class="c-bull">₹${s.tp.toFixed(1)}</td>
-      <td class="c-bull" style="font-size:9px">${s.signal.startsWith("B")?"+":""}${(s.signal.startsWith("B")?(s.tp-s.cmp)/s.cmp*100:(s.cmp-s.tp)/s.cmp*100).toFixed(1)}%</td>
       <td class="c-bear">₹${s.sl.toFixed(1)}</td>
       <td class="${s.rr>=2?'c-bull':s.rr>=1?'c-amb':'c-bear'}">${s.rr}</td>
       <td class="${wrCls}">${histWR}</td>
@@ -2337,8 +2344,8 @@ function renderTop25() {
       <td class="${s.ret_250>0?'c-bull':'c-bear'}">${retStr}</td>
     </tr>`;
   };
-  document.getElementById('top25BuyBody').innerHTML=buys.length?buys.map(row).join(''):`<tr><td colspan="15" class="empty">No buy signals today</td></tr>`;
-  document.getElementById('top25SellBody').innerHTML=sells.length?sells.map(row).join(''):`<tr><td colspan="15" class="empty">No sell signals today</td></tr>`;
+  document.getElementById('top25BuyBody').innerHTML=buys.length?buys.map(row).join(''):`<tr><td colspan="14" class="empty">No buy signals today</td></tr>`;
+  document.getElementById('top25SellBody').innerHTML=sells.length?sells.map(row).join(''):`<tr><td colspan="14" class="empty">No sell signals today</td></tr>`;
 }
 function sortTop25(type,col){if(type==='buy')top25SortBuy=col;else top25SortSell=col;renderTop25()}
 
@@ -2419,7 +2426,6 @@ function applyFilters() {
       <td><span class="${s.hvp>60?'c-bull':s.hvp<35?'c-bear':'c-amb'}">${s.hvp}</span></td>
       <td>₹${s.cmp.toFixed(1)}</td>
       <td class="c-bull">₹${s.tp.toFixed(1)}</td>
-      <td class="c-bull" style="font-size:9px">${s.signal.startsWith("B")?"+":""}${(s.signal.startsWith("B")?(s.tp-s.cmp)/s.cmp*100:(s.cmp-s.tp)/s.cmp*100).toFixed(1)}%</td>
       <td class="c-bear">₹${s.sl.toFixed(1)}</td>
       <td class="${s.rr>=2?'c-bull':s.rr>=1?'c-amb':'c-bear'}">${s.rr}</td>
       <td class="c-teal">${s.kelly_pct!==null?s.kelly_pct+'%':'—'}</td>
@@ -2480,7 +2486,7 @@ function renderPFCards() {
     return`<div class="pf-card ${pfClass}">
       <div class="pf-hdr">
         <div>
-          <div class="pf-title ${pf.type==='buy'?'c-bull':'c-bear'}">${pf.type.toUpperCase()} Portfolio · ${pf.day}</div>
+          <div class="pf-title ${pf.type==='buy'?'c-bull':'c-bear'}">${pf.type==="buy"?"📈":"📉"} ${pf.type.toUpperCase()} Portfolio · ${pf.day} <span style="font-size:8px;opacity:.6">= Top 25 Picks</span></div>
           <div class="pf-meta">${pf.stocks.length} stocks · ${pf.sectors?pf.sectors.length+' sectors · ':''} Score≥${pf.minScoreUsed||'—'} · ${pf.regimeAtCreation?pf.regimeAtCreation.toUpperCase()+' regime · ':''} Dissolves ${pf.dissolveDay} ${pf.dissolveDate}</div>
         </div>
         <div style="text-align:right">
