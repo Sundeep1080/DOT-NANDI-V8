@@ -3236,7 +3236,7 @@ async function confirmPlaceOrder(){
       validity:'DAY'
     });
     if((orderType==='LIMIT'||orderType==='SL-M')&&price>0) body.append('price',price.toFixed(2));
-    const res=await fetch(`${ZD_WORKER}/kite/orders/regular`,{
+    const res=await fetch(`${ZD_WORKER}/place-order`,{
       method:'POST',
       headers:{
         'X-Kite-Version':'3',
