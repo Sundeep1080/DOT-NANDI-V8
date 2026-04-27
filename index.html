@@ -236,14 +236,14 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
 
 /* ORDER MODAL */
 #orderModal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:10000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
-.om-box{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-lg);padding:20px 22px;width:340px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.4)}
-.om-title{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--bright);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.om-box{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-lg);padding:24px 26px;width:480px;max-width:96vw;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.om-title{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--bright);margin-bottom:16px;display:flex;align-items:center;gap:8px}
 .om-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.om-label{font-family:var(--mono);font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
-.om-val{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--bright)}
-.om-inp{background:var(--bg3);border:1px solid var(--border2);border-radius:4px;color:var(--bright);padding:5px 9px;font-family:var(--mono);font-size:11px;font-weight:700;width:100%;outline:none;margin-top:4px}
+.om-label{font-family:var(--mono);font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
+.om-val{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--bright)}
+.om-inp{background:var(--bg3);border:1px solid var(--border2);border-radius:4px;color:var(--bright);padding:8px 11px;font-family:var(--mono);font-size:14px;font-weight:700;width:100%;outline:none;margin-top:4px}
 .om-inp:focus{border-color:var(--amber)}
-.om-sel{background:var(--bg3);border:1px solid var(--border2);border-radius:4px;color:var(--bright);padding:5px 9px;font-family:var(--mono);font-size:10px;outline:none;cursor:pointer}
+.om-sel{background:var(--bg3);border:1px solid var(--border2);border-radius:4px;color:var(--bright);padding:8px 11px;font-family:var(--mono);font-size:12px;outline:none;cursor:pointer}
 .om-sel:focus{border-color:var(--amber)}
 .om-divider{height:1px;background:var(--border);margin:12px 0}
 .om-warn{font-family:var(--mono);font-size:8px;color:var(--amber);background:var(--amber-g);border:1px solid rgba(217,119,6,.3);border-radius:4px;padding:6px 9px;margin-bottom:12px}
@@ -257,6 +257,12 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
 .ob-buy:hover{background:rgba(5,150,105,.2)}
 .ob-sell{background:var(--bear-g);color:var(--bear);border:1px solid rgba(220,38,38,.3);border-radius:3px;padding:1px 6px;font-family:var(--mono);font-size:8px;font-weight:700;cursor:pointer;white-space:nowrap}
 .ob-sell:hover{background:rgba(220,38,38,.2)}
+/* Prevent wrapping in Top25 tables */
+#top25BuyTbl td, #top25SellTbl td, #sigTbl td { white-space:nowrap }
+#top25BuyTbl th, #top25SellTbl th, #sigTbl th { white-space:nowrap }
+#top25BuyTbl td:nth-child(13), #top25SellTbl td:nth-child(13),
+#top25BuyTbl th:nth-child(13), #top25SellTbl th:nth-child(13) { max-width:52px; width:52px }
+
 </style>
 </head>
 <body>
@@ -3248,12 +3254,14 @@ async function confirmPlaceOrder(){
     const j=await res.json();
     const el=document.getElementById('omResult');el.style.display='block';
     if(j.status==='success'&&j.data&&j.data.order_id){
+      const oid=j.data.order_id;
       el.style.color='var(--bull)';
-      el.textContent=`✓ Order placed! Order ID: ${j.data.order_id}`;
-      toast(`${_omDirection} ${qty}× ${sym} placed ✓ #${j.data.order_id}`,'ok');
-      zdLog(`ORDER ${_omDirection} ${qty}×${sym} [${orderType}/${product}] → ID ${j.data.order_id}`);
+      el.innerHTML=`<div style="margin-bottom:8px">✓ Order placed! Order ID: <strong>${oid}</strong></div>
+        <button onclick="zdCancelOrder('${oid}')" style="background:var(--bear-g);color:var(--bear);border:1px solid rgba(220,38,38,.3);border-radius:4px;padding:6px 14px;font-family:var(--mono);font-size:10px;font-weight:700;cursor:pointer">✕ Cancel This Order</button>`;
+      toast(`${_omDirection} ${qty}× ${sym} placed ✓ #${oid}`,'ok');
+      zdLog(`ORDER ${_omDirection} ${qty}×${sym} [${orderType}/${product}] → ID ${oid}`);
       btn.textContent='✓ Done';
-      setTimeout(()=>closeOrderModal(),3000);
+      setTimeout(()=>closeOrderModal(),8000);
     } else {
       const msg=(j.message||j.error_type||JSON.stringify(j));
       el.style.color='var(--bear)';
@@ -3268,6 +3276,28 @@ async function confirmPlaceOrder(){
     btn.disabled=false;
     btn.textContent=_omDirection==='BUY'?'Place BUY Order':'Place SELL Order';
   }
+}
+
+async function zdCancelOrder(orderId){
+  if(!confirm(`Cancel order #${orderId}?`))return;
+  try{
+    const res=await fetch(`${ZD_WORKER}/kite/orders/regular/${orderId}`,{
+      method:'DELETE',
+      headers:{'X-Kite-Version':'3','Authorization':`token ${zdApiKey}:${zdToken}`}
+    });
+    const j=await res.json();
+    if(j.status==='success'){
+      toast(`Order #${orderId} cancelled ✓`,'ok');
+      zdLog(`CANCEL OK → #${orderId}`);
+      const el=document.getElementById('omResult');
+      if(el)el.innerHTML=`<span style="color:var(--bull)">✓ Order #${orderId} cancelled successfully</span>`;
+      setTimeout(()=>closeOrderModal(),2000);
+    } else {
+      const msg=j.message||JSON.stringify(j);
+      toast(`Cancel failed: ${msg}`,'err');
+      zdLog(`CANCEL FAIL #${orderId}: ${msg}`);
+    }
+  } catch(e){toast('Cancel error: '+e.message,'err')}
 }
 
 // ═══════════════════════════════════════════════════════════
