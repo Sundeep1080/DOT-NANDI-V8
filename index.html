@@ -263,9 +263,44 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
 #top25BuyTbl td:nth-child(13), #top25SellTbl td:nth-child(13),
 #top25BuyTbl th:nth-child(13), #top25SellTbl th:nth-child(13) { max-width:52px; width:52px }
 
+/* PASSWORD LOCK */
+#lockScreen{position:fixed;inset:0;background:#07090d;z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column}
+.lock-box{background:#0c111a;border:1px solid #2a3f58;border-radius:12px;padding:32px 36px;width:340px;max-width:94vw;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.lock-title{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--amber);margin-bottom:4px}
+.lock-sub{font-family:var(--mono);font-size:9px;color:var(--text2);margin-bottom:20px;letter-spacing:1px}
+.lock-inp{width:100%;background:#0a0e16;border:1px solid #2a3f58;border-radius:6px;color:var(--bright);padding:12px 14px;font-family:var(--mono);font-size:15px;text-align:center;outline:none;letter-spacing:4px;margin-bottom:12px}
+.lock-inp:focus{border-color:var(--amber)}
+.lock-btn{width:100%;padding:12px;background:var(--amber);color:#000;border:none;border-radius:6px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:1px}
+.lock-btn:hover{background:#f59e0b}
+.lock-err{font-family:var(--mono);font-size:10px;color:var(--bear);margin-top:8px;min-height:16px}
+/* SELF-LEARNING DASHBOARD */
+.sl-section{margin-bottom:18px}
+.sl-title{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+.sl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;margin-bottom:8px}
+.sl-card{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px 12px}
+.sl-card label{font-family:var(--mono);font-size:8px;color:var(--text2);display:block;margin-bottom:2px;text-transform:uppercase}
+.sl-card .val{font-family:var(--mono);font-size:15px;font-weight:700}
+.sl-verdict{font-family:var(--mono);font-size:9px;padding:8px 12px;border-radius:6px;margin-bottom:6px;line-height:1.6}
+.sl-verdict.good{background:rgba(5,150,105,.12);border:1px solid rgba(5,150,105,.25);color:#6ee7b7}
+.sl-verdict.warn{background:rgba(217,119,6,.1);border:1px solid rgba(217,119,6,.25);color:#fcd34d}
+.sl-verdict.bad{background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.25);color:#fca5a5}
+/* MB card enhancements */
+.mb-sig-row{display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap}
+
 </style>
 </head>
 <body>
+<!-- PASSWORD LOCK SCREEN -->
+<div id="lockScreen">
+  <div class="lock-box">
+    <div class="lock-title">🔒 NANDI v8</div>
+    <div class="lock-sub">SIGNAL INTELLIGENCE · SECURE ACCESS</div>
+    <input class="lock-inp" id="lockPwd" type="password" placeholder="Enter password" onkeydown="if(event.key==='Enter')checkLock()">
+    <button class="lock-btn" onclick="checkLock()">UNLOCK</button>
+    <div class="lock-err" id="lockErr"></div>
+    <div style="font-family:var(--mono);font-size:8px;color:var(--text2);margin-top:16px;opacity:0.5">Auto-locks after 15 min inactivity</div>
+  </div>
+</div>
 <!-- ORDER MODAL -->
 <div id="orderModal" style="display:none">
   <div class="om-box">
@@ -516,6 +551,7 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
     <button class="i-tab" onclick="switchIntel('regimexperf')">&#x1F4CA; Regime vs Signal</button>
     <button class="i-tab" onclick="switchIntel('ledger')">Ledger</button>
     <button class="i-tab" onclick="switchIntel('retcorr')">Return Corr</button>
+    <button class="i-tab" onclick="switchIntel('slDash')" style="background:rgba(217,119,6,.15);color:var(--amber)">🧠 Learning Dashboard</button>
   </div>
 
   <!-- M6 -->
@@ -685,6 +721,12 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
   <div class="i-panel card" id="intel-retcorr" style="border-radius:0 0 var(--r-lg) var(--r-lg)">
     <div class="ct"><i class="fas fa-chart-bar"></i> Return ↔ Trigger Correlation (250d)</div>
     <div id="retCorrContent" class="grid2"></div>
+  </div>
+
+  <!-- SELF-LEARNING DASHBOARD -->
+  <div class="i-panel card" id="intel-slDash" style="border-radius:0 0 var(--r-lg) var(--r-lg)">
+    <div class="ct" style="background:rgba(217,119,6,.12);border-bottom:1px solid rgba(217,119,6,.2)"><i class="fas fa-brain"></i> 🧠 Self-Learning Dashboard — What Has NANDI Learnt?</div>
+    <div id="slDashContent" style="padding:4px 0"></div>
   </div>
 
 </div><!-- end intel page -->
@@ -2237,13 +2279,13 @@ function zdConnect() {
       if(!zdInterval){
         const now=new Date(),close=new Date();close.setHours(15,30,0,0);
         if(now<=close){
-          const btn=document.getElementById('zdAutoBtn');
+          const autoBtn=document.getElementById('zdAutoBtn');
           zdInterval=setInterval(()=>{
             const n=new Date(),c=new Date();c.setHours(15,30,0,0);
-            if(n>c){clearInterval(zdInterval);zdInterval=null;if(btn)btn.innerHTML='<i class="fas fa-sync"></i> Auto OFF';zdLog('Auto stopped — market closed');return}
+            if(n>c){clearInterval(zdInterval);zdInterval=null;if(autoBtn)autoBtn.innerHTML='<i class="fas fa-sync"></i> Auto OFF';zdLog('Auto stopped — market closed');return}
             zdFetchNow();
           },30000);
-          if(btn)btn.innerHTML='<i class="fas fa-sync fa-spin"></i> Auto ON';
+          if(autoBtn)autoBtn.innerHTML='<i class="fas fa-sync fa-spin"></i> Auto ON';
           zdLog('Auto refresh started (30s) — runs until 15:30');
           toast('Auto refresh ON — every 30s','kite');
           zdFetchNow();
@@ -2895,14 +2937,26 @@ function renderMB() { // Multibagger
   el.innerHTML=mbList.map(function(m,i){
     const gold=i<3?'border:1px solid var(--amber);box-shadow:0 2px 12px rgba(217,119,6,.2)':'';
     const symSec=(allStockData[m.sym]&&allStockData[m.sym].sector)||'';
+    const sig=allSignals.find(s=>s.symbol===m.sym);
+    const lStats=getMBLedgerStats(m.sym);
+    const cmp=sig?sig.cmp:0, tp=sig?sig.tp:0, sl=sig?sig.sl:0;
+    const orderBtn=zdLiveMode&&sig?`<button class="${sig.signal.startsWith('B')?'ob-buy':'ob-sell'}" onclick="showOrderModal('${m.sym}','${sig.signal.startsWith('B')?'BUY':'SELL'}',${cmp},${tp},${sl},1)">${sig.signal.startsWith('B')?'▲ BUY':'▼ SELL'}</button>`:'';
     return`<div class="card" style="${gold}">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
         <strong>${m.sym}</strong>${i<3?'<span class="b b-mb">★ TOP</span>':''}
       </div>
       <div style="font-family:var(--mono);font-size:8px;color:var(--text2)">${symSec}</div>
-      <div style="margin-top:6px;display:flex;gap:10px">
+      <div style="margin-top:6px;display:flex;gap:10px;flex-wrap:wrap">
         <div class="pf-stat"><label>MB Score</label><span class="c-amb">${m.score}</span></div>
         <div class="pf-stat"><label>250d Ret</label><span class="${m.ret>0?'c-bull':'c-bear'}">${m.ret>0?'+':''}${m.ret.toFixed(1)}%</span></div>
+        ${lStats?`<div class="pf-stat"><label>Ledger WR</label><span class="${lStats.wr>=60?'c-bull':lStats.wr<45?'c-bear':'c-amb'}">${lStats.wr}% (${lStats.n})</span></div>`:''}
+        ${sig?`<div class="pf-stat"><label>CMP</label><span class="c-bright">₹${cmp.toFixed(1)}</span></div>`:''}
+      </div>
+      <div class="mb-sig-row">
+        ${sig?sigBadge(sig.signal):'<span class="c-dim" style="font-size:8px">No signal today</span>'}
+        ${lStats&&lStats.wr>=60?'<span class="b b-bull" style="font-size:7px">✓ Proven</span>':''}
+        ${lStats&&lStats.wr<45&&lStats.n>=3?'<span class="b b-bear" style="font-size:7px">⚠ Weak history</span>':''}
+        ${orderBtn}
       </div>
     </div>`;
   }).join('')||'<div class="empty">Load data to see multibagger candidates</div>';
@@ -3122,7 +3176,7 @@ function switchIntel(name){
 }
 function renderIntelActive(){const active=document.querySelector('.i-panel.active');if(active)renderIntelTab(active.id.replace('intel-',''))}
 function renderIntelTab(name){
-  const map={m6:renderM6,m1:renderM1,m4:renderM4,m2:renderM2,m3:renderM3,m5:renderM5,m7:renderM7,tpsl:renderTPSL,mb:renderMB,sectors:renderSectors,ledger:renderLedger,retcorr:renderRetCorr, wrref:function(){},regimexperf:function(){renderRegimeCrossPerf();}};
+  const map={m6:renderM6,m1:renderM1,m4:renderM4,m2:renderM2,m3:renderM3,m5:renderM5,m7:renderM7,tpsl:renderTPSL,mb:renderMB,sectors:renderSectors,ledger:renderLedger,retcorr:renderRetCorr, wrref:function(){},regimexperf:function(){renderRegimeCrossPerf();},slDash:renderSLDash};
   if(map[name])map[name]();
 }
 
@@ -3198,6 +3252,7 @@ function showOrderModal(symbol, direction, cmp, tp, sl, qty){
   document.getElementById('omPrice').disabled=true;
   const badge=document.getElementById('omDirBadge');
   const btn=document.getElementById('omConfirmBtn');
+  btn.disabled=false;
   if(direction==='BUY'){
     badge.innerHTML='<span class="b b-bull" style="font-size:10px;padding:2px 8px">▲ BUY</span>';
     btn.className='btn-order-buy';btn.textContent='Place BUY Order';
@@ -3205,7 +3260,7 @@ function showOrderModal(symbol, direction, cmp, tp, sl, qty){
     badge.innerHTML='<span class="b b-bear" style="font-size:10px;padding:2px 8px">▼ SELL</span>';
     btn.className='btn-order-sell';btn.textContent='Place SELL Order';
   }
-  const res=document.getElementById('omResult');res.style.display='none';res.textContent='';
+  const res=document.getElementById('omResult');res.style.display='none';res.innerHTML='';
   document.getElementById('orderModal').style.display='flex';
 }
 
@@ -3220,6 +3275,11 @@ function omTogglePrice(){
 
 function closeOrderModal(){
   document.getElementById('orderModal').style.display='none';
+  const btn=document.getElementById('omConfirmBtn');
+  btn.disabled=false;
+  btn.textContent=_omDirection==='BUY'?'Place BUY Order':'Place SELL Order';
+  const el=document.getElementById('omResult');
+  el.style.display='none';el.innerHTML='';
 }
 
 async function confirmPlaceOrder(){
@@ -3298,6 +3358,213 @@ async function zdCancelOrder(orderId){
       zdLog(`CANCEL FAIL #${orderId}: ${msg}`);
     }
   } catch(e){toast('Cancel error: '+e.message,'err')}
+}
+
+// ═══════════════════════════════════════════════════════════
+// PASSWORD LOCK
+// ═══════════════════════════════════════════════════════════
+// SHA-256 hash of password stored — never plaintext
+// Default password: NANDI2024  (change hash below to change password)
+const LOCK_HASH = 'a8f5f167f44f4964e6c998dee827110c8f7c171f4ff1e1d9e7f99a5f1d6bde5d'; // NANDI2024
+let _lockTimer = null;
+
+async function hashStr(s){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function checkLock(){
+  const val=document.getElementById('lockPwd').value;
+  const h=await hashStr(val);
+  if(h===LOCK_HASH){
+    document.getElementById('lockScreen').style.display='none';
+    document.getElementById('lockErr').textContent='';
+    resetLockTimer();
+  } else {
+    document.getElementById('lockErr').textContent='❌ Incorrect password';
+    document.getElementById('lockPwd').value='';
+    document.getElementById('lockPwd').focus();
+  }
+}
+
+function resetLockTimer(){
+  if(_lockTimer)clearTimeout(_lockTimer);
+  _lockTimer=setTimeout(()=>{
+    document.getElementById('lockScreen').style.display='flex';
+    document.getElementById('lockPwd').value='';
+    document.getElementById('lockPwd').focus();
+    toast('Session locked — 15 min inactivity','err');
+  },15*60*1000);
+}
+
+// Reset timer on any user activity
+['click','keydown','mousemove','touchstart'].forEach(ev=>
+  document.addEventListener(ev,()=>{
+    if(document.getElementById('lockScreen').style.display==='none') resetLockTimer();
+  },{passive:true})
+);
+
+// ═══════════════════════════════════════════════════════════
+// MB SELF-LEARNING — connect MB outcomes to ledger
+// ═══════════════════════════════════════════════════════════
+function getMBLedgerStats(sym){
+  const ledger=loadLedger();
+  const recs=ledger.filter(r=>r.symbol===sym&&(r.outcome==='win'||r.outcome==='loss'));
+  if(!recs.length)return null;
+  const wins=recs.filter(r=>r.outcome==='win').length;
+  const wr=Math.round(wins/recs.length*100);
+  const avgPnl=recs.reduce((s,r)=>s+(r.pnl_pct||0),0)/recs.length;
+  return{n:recs.length,wins,wr,avgPnl:Math.round(avgPnl*10)/10};
+}
+
+// ═══════════════════════════════════════════════════════════
+// SELF-LEARNING DASHBOARD
+// ═══════════════════════════════════════════════════════════
+function renderSLDash(){
+  const el=document.getElementById('slDashContent');
+  if(!el)return;
+  const ledger=loadLedger();
+  const resolved=ledger.filter(r=>r.outcome==='win'||r.outcome==='loss');
+  const totalTrades=ledger.length;
+  const wins=resolved.filter(r=>r.outcome==='win').length;
+  const losses=resolved.filter(r=>r.outcome==='loss').length;
+  const wr=resolved.length?Math.round(wins/resolved.length*100):0;
+  const avgPnl=resolved.length?resolved.reduce((s,r)=>s+(r.pnl_pct||0),0)/resolved.length:0;
+  const openTrades=ledger.filter(r=>r.outcome==='open').length;
+
+  // Decision quality — is WR improving over time?
+  const recent=resolved.slice(-20);
+  const old=resolved.slice(0,Math.max(0,resolved.length-20));
+  const recentWR=recent.length?Math.round(recent.filter(r=>r.outcome==='win').length/recent.length*100):null;
+  const oldWR=old.length?Math.round(old.filter(r=>r.outcome==='win').length/old.length*100):null;
+  const improving=recentWR!==null&&oldWR!==null&&recentWR>oldWR;
+  const degrading=recentWR!==null&&oldWR!==null&&recentWR<oldWR-5;
+
+  // Signal breakdown
+  const bySig={};
+  resolved.forEach(r=>{
+    if(!bySig[r.signal])bySig[r.signal]={w:0,l:0};
+    if(r.outcome==='win')bySig[r.signal].w++;else bySig[r.signal].l++;
+  });
+
+  // Best and worst signal
+  const sigStats=Object.entries(bySig).map(([s,v])=>({sig:s,wr:Math.round(v.w/(v.w+v.l)*100),n:v.w+v.l})).filter(x=>x.n>=2).sort((a,b)=>b.wr-a.wr);
+  const bestSig=sigStats[0];
+  const worstSig=sigStats[sigStats.length-1];
+
+  // Adaptive weight drift
+  const sigOrder=['B1-OS','B1-MOM','B2','B3','S1-OB','S1-MOM','S2','S3'];
+  const weightDrifts=sigOrder.map(s=>{
+    const w=adaptiveWeights[s]||{prior_w:PRIOR_BASE[s]||20,learned_w:PRIOR_BASE[s]||20,delta:0,wr:PRIOR_WR[s]||50,n:0};
+    return{sig:s,...w};
+  }).filter(w=>w.n>0).sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta));
+
+  // Context insights — top performing contexts
+  const ctxInsights=Object.entries(contextWRMap).filter(([_,v])=>v.n>=3&&v.wr>65).sort((a,b)=>b[1].wr-a[1].wr).slice(0,5);
+  const ctxWarn=Object.entries(contextWRMap).filter(([_,v])=>v.n>=3&&v.wr<45).sort((a,b)=>a[1].wr-b[1].wr).slice(0,5);
+
+  // Verdict
+  let verdictClass='warn', verdictText='';
+  if(resolved.length<5){
+    verdictClass='warn';
+    verdictText=`⏳ Still accumulating data — only ${resolved.length} resolved trades. Need at least 10 to make reliable judgements. Keep running sessions daily.`;
+  } else if(improving&&wr>=60){
+    verdictClass='good';
+    verdictText=`✅ System is improving. Recent 20-trade WR is ${recentWR}% vs earlier ${oldWR}%. Decision-making is getting sharper. Adaptive weights are correctly promoting high-performing signal types.`;
+  } else if(degrading){
+    verdictClass='bad';
+    verdictText=`⚠️ Recent performance has dipped — last 20-trade WR ${recentWR}% vs earlier ${oldWR}%. This may reflect a market regime shift. The system will self-correct as new data is absorbed. Consider loading fresh 250-day data.`;
+  } else {
+    verdictClass='warn';
+    verdictText=`📊 System has ${resolved.length} resolved trades with ${wr}% overall win rate. ${recentWR!==null?`Recent 20-trade WR: ${recentWR}%.`:''} Needs more sessions to show clear learning trajectory.`;
+  }
+
+  el.innerHTML=`
+  <div class="sl-section">
+    <div class="sl-verdict ${verdictClass}">${verdictText}</div>
+  </div>
+
+  <div class="sl-section">
+    <div class="sl-title">📊 Overall Learning Stats</div>
+    <div class="sl-grid">
+      <div class="sl-card"><label>Total Signals Generated</label><span class="val c-bright">${totalTrades}</span></div>
+      <div class="sl-card"><label>Resolved Trades</label><span class="val c-bright">${resolved.length}</span></div>
+      <div class="sl-card"><label>Open / Pending</label><span class="val c-amb">${openTrades}</span></div>
+      <div class="sl-card"><label>Overall Win Rate</label><span class="val ${wr>=60?'c-bull':wr>=50?'c-amb':'c-bear'}">${wr}%</span></div>
+      <div class="sl-card"><label>Wins</label><span class="val c-bull">${wins}</span></div>
+      <div class="sl-card"><label>Losses</label><span class="val c-bear">${losses}</span></div>
+      <div class="sl-card"><label>Avg P&L per Trade</label><span class="val ${avgPnl>=0?'c-bull':'c-bear'}">${avgPnl>=0?'+':''}${avgPnl.toFixed(1)}%</span></div>
+      <div class="sl-card"><label>Breakeven WR Needed</label><span class="val c-dim">63.6%</span></div>
+    </div>
+    ${recentWR!==null&&oldWR!==null?`<div style="font-family:var(--mono);font-size:9px;color:var(--text2);margin-top:4px">
+      Decision trajectory: Earlier WR <strong class="c-amb">${oldWR}%</strong> → Recent 20-trade WR <strong class="${recentWR>=oldWR?'c-bull':'c-bear'}">${recentWR}%</strong>
+      <span class="${recentWR>=oldWR?'c-bull':'c-bear'}">${recentWR>=oldWR?'▲ Improving':'▼ Degrading'}</span>
+    </div>`:''}
+  </div>
+
+  <div class="sl-section">
+    <div class="sl-title">🎯 What The System Has Learnt About Each Signal</div>
+    <div class="tw"><table><thead><tr><th>Signal</th><th>Prior Weight</th><th>Learnt Weight</th><th>Drift</th><th>Learnt WR%</th><th>Trades</th><th>Verdict</th></tr></thead>
+    <tbody>${sigOrder.map(s=>{
+      const w=adaptiveWeights[s]||{prior_w:PRIOR_BASE[s]||20,learned_w:PRIOR_BASE[s]||20,delta:0,wr:PRIOR_WR[s]||50,n:0};
+      const dc=w.delta>2?'c-bull':w.delta<-2?'c-bear':'c-dim';
+      const verdict=w.n<3?'<span class="c-dim">Accumulating…</span>':w.delta>5?'<span class="c-bull">▲ Promoted — performing well</span>':w.delta<-5?'<span class="c-bear">▼ Demoted — underperforming</span>':'<span class="c-amb">~ Stable</span>';
+      return`<tr><td>${sigBadge(s)}</td><td class="c-dim">${w.prior_w}</td><td><strong>${w.learned_w}</strong></td><td class="${dc}">${w.delta>0?'+':''}${w.delta||0}</td><td class="${w.wr>60?'c-bull':w.wr<50?'c-bear':'c-amb'}">${w.wr||PRIOR_WR[s]||50}%</td><td class="c-dim">${w.n||0}</td><td>${verdict}</td></tr>`;
+    }).join('')}</tbody></table></div>
+    ${bestSig?`<div style="font-family:var(--mono);font-size:9px;margin-top:8px">
+      🏆 Best signal: ${sigBadge(bestSig.sig)} with <strong class="c-bull">${bestSig.wr}% WR</strong> over ${bestSig.n} trades &nbsp;|&nbsp;
+      ⚠️ Weakest signal: ${sigBadge(worstSig.sig)} with <strong class="c-bear">${worstSig.wr}% WR</strong> over ${worstSig.n} trades
+    </div>`:''}
+  </div>
+
+  <div class="sl-section">
+    <div class="sl-title">🌐 Market Context Learning — When Does The System Work Best?</div>
+    ${ctxInsights.length?`
+    <div style="font-family:var(--mono);font-size:9px;color:var(--text2);margin-bottom:6px">✅ High-confidence contexts (WR > 65%, min 3 trades):</div>
+    <div class="tw"><table><thead><tr><th>Context (Signal|Regime|Breadth|HVP)</th><th>Win Rate</th><th>Trades</th></tr></thead>
+    <tbody>${ctxInsights.map(([k,v])=>`<tr><td style="font-size:8px">${k}</td><td class="c-bull">${v.wr}%</td><td class="c-dim">${v.n}</td></tr>`).join('')}</tbody></table></div>`
+    :'<div class="c-dim" style="font-family:var(--mono);font-size:9px">Accumulating context data — run more sessions daily.</div>'}
+    ${ctxWarn.length?`
+    <div style="font-family:var(--mono);font-size:9px;color:var(--text2);margin:10px 0 6px">⚠️ Avoid these contexts (WR < 45%):</div>
+    <div class="tw"><table><thead><tr><th>Context</th><th>Win Rate</th><th>Trades</th></tr></thead>
+    <tbody>${ctxWarn.map(([k,v])=>`<tr><td style="font-size:8px">${k}</td><td class="c-bear">${v.wr}%</td><td class="c-dim">${v.n}</td></tr>`).join('')}</tbody></table></div>`:''}
+  </div>
+
+  <div class="sl-section">
+    <div class="sl-title">📈 Adaptive TP/SL Learning — Stock-Level Intelligence</div>
+    <div style="font-family:var(--mono);font-size:9px;color:var(--text2);margin-bottom:6px">
+      The system has learnt custom TP/SL multipliers per stock based on historical exit patterns. Stocks with more trades get more accurate multipliers.
+    </div>
+    <div style="font-family:var(--mono);font-size:9px">
+      Stocks with custom learnt TP/SL: <strong class="c-bull">${Object.values(stockTPSL).filter(v=>v.trades>=3).length}</strong> &nbsp;|&nbsp;
+      Still on defaults: <strong class="c-dim">${Object.values(stockTPSL).filter(v=>v.trades<3).length}</strong>
+    </div>
+  </div>
+
+  <div class="sl-section">
+    <div class="sl-title">⚡ Kelly Position Sizing — Capital Allocation Intelligence</div>
+    <div style="font-family:var(--mono);font-size:9px;color:var(--text2);margin-bottom:6px">
+      Kelly % determines how much capital to allocate per signal. Higher WR = higher Kelly = larger position.
+    </div>
+    <div class="sl-grid">
+      <div class="sl-card"><label>Stocks with Kelly Data</label><span class="val c-teal">${Object.keys(kellyData).length}</span></div>
+      <div class="sl-card"><label>Avg Kelly %</label><span class="val c-amb">${Object.keys(kellyData).length?Math.round(Object.values(kellyData).reduce((s,v)=>s+(v.kelly_pct||0),0)/Object.keys(kellyData).length*10)/10:0}%</span></div>
+    </div>
+  </div>
+
+  <div class="sl-section">
+    <div class="sl-title">🔁 Signal Sequence Learning</div>
+    <div style="font-family:var(--mono);font-size:9px;color:var(--text2);margin-bottom:6px">
+      System tracks whether a BUY after a SELL (or vice versa) for the same stock produces better outcomes.
+    </div>
+    ${Object.keys(seqWinRates).filter(k=>seqWinRates[k].n>=3).length?
+    `<div class="tw"><table><thead><tr><th>Sequence</th><th>WR%</th><th>Trades</th><th>Insight</th></tr></thead>
+    <tbody>${Object.entries(seqWinRates).filter(([_,v])=>v.n>=3).sort((a,b)=>b[1].wr-a[1].wr).slice(0,10).map(([k,v])=>`
+      <tr><td class="c-kite">${k}</td><td class="${v.wr>60?'c-bull':v.wr<45?'c-bear':'c-amb'}">${v.wr}%</td><td class="c-dim">${v.n}</td>
+      <td style="font-size:8px;color:var(--text2)">${v.wr>65?'Strong confirmation pattern — system boosts score':v.wr<40?'Reversal trap — system penalises score':'Neutral pattern'}</td></tr>`).join('')}
+    </tbody></table></div>`
+    :'<div class="c-dim" style="font-family:var(--mono);font-size:9px">Need more trades per stock to identify sequence patterns.</div>'}
+  </div>`;
 }
 
 // ═══════════════════════════════════════════════════════════
