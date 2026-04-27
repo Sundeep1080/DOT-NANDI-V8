@@ -263,16 +263,6 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
 #top25BuyTbl td:nth-child(13), #top25SellTbl td:nth-child(13),
 #top25BuyTbl th:nth-child(13), #top25SellTbl th:nth-child(13) { max-width:52px; width:52px }
 
-/* PASSWORD LOCK */
-#lockScreen{position:fixed;inset:0;background:#07090d;z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column}
-.lock-box{background:#0c111a;border:1px solid #2a3f58;border-radius:12px;padding:32px 36px;width:340px;max-width:94vw;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6)}
-.lock-title{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--amber);margin-bottom:4px}
-.lock-sub{font-family:var(--mono);font-size:9px;color:var(--text2);margin-bottom:20px;letter-spacing:1px}
-.lock-inp{width:100%;background:#0a0e16;border:1px solid #2a3f58;border-radius:6px;color:var(--bright);padding:12px 14px;font-family:var(--mono);font-size:15px;text-align:center;outline:none;letter-spacing:4px;margin-bottom:12px}
-.lock-inp:focus{border-color:var(--amber)}
-.lock-btn{width:100%;padding:12px;background:var(--amber);color:#000;border:none;border-radius:6px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:1px}
-.lock-btn:hover{background:#f59e0b}
-.lock-err{font-family:var(--mono);font-size:10px;color:var(--bear);margin-top:8px;min-height:16px}
 /* SELF-LEARNING DASHBOARD */
 .sl-section{margin-bottom:18px}
 .sl-title{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)}
@@ -290,17 +280,6 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
 </style>
 </head>
 <body>
-<!-- PASSWORD LOCK SCREEN -->
-<div id="lockScreen">
-  <div class="lock-box">
-    <div class="lock-title">🔒 NANDI v8</div>
-    <div class="lock-sub">SIGNAL INTELLIGENCE · SECURE ACCESS</div>
-    <input class="lock-inp" id="lockPwd" type="password" placeholder="Enter password" onkeydown="if(event.key==='Enter')checkLock()">
-    <button class="lock-btn" onclick="checkLock()">UNLOCK</button>
-    <div class="lock-err" id="lockErr"></div>
-    <div style="font-family:var(--mono);font-size:8px;color:var(--text2);margin-top:16px;opacity:0.5">Auto-locks after 15 min inactivity</div>
-  </div>
-</div>
 <!-- ORDER MODAL -->
 <div id="orderModal" style="display:none">
   <div class="om-box">
@@ -3359,50 +3338,6 @@ async function zdCancelOrder(orderId){
     }
   } catch(e){toast('Cancel error: '+e.message,'err')}
 }
-
-// ═══════════════════════════════════════════════════════════
-// PASSWORD LOCK
-// ═══════════════════════════════════════════════════════════
-// SHA-256 hash of password stored — never plaintext
-// Default password: NANDI2024  (change hash below to change password)
-const LOCK_HASH = 'a8f5f167f44f4964e6c998dee827110c8f7c171f4ff1e1d9e7f99a5f1d6bde5d'; // NANDI2024
-let _lockTimer = null;
-
-async function hashStr(s){
-  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
-
-async function checkLock(){
-  const val=document.getElementById('lockPwd').value;
-  const h=await hashStr(val);
-  if(h===LOCK_HASH){
-    document.getElementById('lockScreen').style.display='none';
-    document.getElementById('lockErr').textContent='';
-    resetLockTimer();
-  } else {
-    document.getElementById('lockErr').textContent='❌ Incorrect password';
-    document.getElementById('lockPwd').value='';
-    document.getElementById('lockPwd').focus();
-  }
-}
-
-function resetLockTimer(){
-  if(_lockTimer)clearTimeout(_lockTimer);
-  _lockTimer=setTimeout(()=>{
-    document.getElementById('lockScreen').style.display='flex';
-    document.getElementById('lockPwd').value='';
-    document.getElementById('lockPwd').focus();
-    toast('Session locked — 15 min inactivity','err');
-  },15*60*1000);
-}
-
-// Reset timer on any user activity
-['click','keydown','mousemove','touchstart'].forEach(ev=>
-  document.addEventListener(ev,()=>{
-    if(document.getElementById('lockScreen').style.display==='none') resetLockTimer();
-  },{passive:true})
-);
 
 // ═══════════════════════════════════════════════════════════
 // MB SELF-LEARNING — connect MB outcomes to ledger
