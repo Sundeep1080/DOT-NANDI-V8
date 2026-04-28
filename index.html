@@ -411,7 +411,7 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
   <div class="top25-grid" id="top25Grid" style="display:none">
     <div class="top25-panel">
       <div class="top25-hdr bull">
-        <div class="top25-title c-bull"><i class="fas fa-arrow-trend-up"></i> Top 25 BUY Signals Today</div>
+        <div class="top25-title c-bull"><i class="fas fa-arrow-trend-up"></i> Top 50 BUY Signals Today</div>
         <div style="margin-left:auto;display:flex;gap:5px">
           <button class="btn btn-d" style="font-size:8px;padding:2px 7px" onclick="sortTop25('buy','score')">Score</button>
           <button class="btn btn-d" style="font-size:8px;padding:2px 7px" onclick="sortTop25('buy','kelly')">Kelly</button>
@@ -422,7 +422,7 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
     </div>
     <div class="top25-panel">
       <div class="top25-hdr bear">
-        <div class="top25-title c-bear"><i class="fas fa-arrow-trend-down"></i> Top 25 SELL Signals Today</div>
+        <div class="top25-title c-bear"><i class="fas fa-arrow-trend-down"></i> Top 50 SELL Signals Today</div>
         <div style="margin-left:auto;display:flex;gap:5px">
           <button class="btn btn-d" style="font-size:8px;padding:2px 7px" onclick="sortTop25('sell','score')">Score</button>
           <button class="btn btn-d" style="font-size:8px;padding:2px 7px" onclick="sortTop25('sell','kelly')">Kelly</button>
@@ -686,7 +686,7 @@ tr.earn td:first-child{border-left:3px solid var(--pink)}
       <strong class="c-bull">💡 OPTIMAL SETTING: TP=2.0% SL=3.5%</strong> — RR 1:1.75, breakeven WR=63.6%.<br>
       Best combo: B2×below_va (74% WR, +0.55% EV) and B3×below_va (72% WR, +0.47% EV).<br>
       ⚠️ AVOID buy signals in rej_lo zone — despite appearing oversold, WR drops to 51-57% (negative EV).<br>
-      700 stocks generate ~250 buy signals daily → Top 25 easily filled. Filter: only below_va and va zones.
+      700 stocks generate ~250 buy signals daily → Top 50 easily filled. Filter: only below_va and va zones.
     </div>
   </div>
 
@@ -2055,8 +2055,8 @@ function createDailyPortfolios() {
     }
     return result;
   }
-  const buyList=diversify(buys, 3, 25);
-  const sellList=diversify(sells, 3, 25);
+  const buyList=diversify(buys, 5, 35);
+  const sellList=diversify(sells, 5, 35);
 
   if(buyList.length===0&&sellList.length===0){
     toast('No signals above score '+minScore+' (regime: '+overallRegime+'). Lower threshold or wait for better setups.','err');
@@ -2450,7 +2450,7 @@ function selectTop25(signals,type){
     return b.score-a.score;
   });
   var sec={},res=[];
-  for(var i=0;i<q.length;i++){var s=q[i],k=s.sector||'X';if(!sec[k])sec[k]=0;if(sec[k]>=3)continue;sec[k]++;res.push(s);if(res.length>=25)break;}
+  for(var i=0;i<q.length;i++){var s=q[i],k=s.sector||'X';if(!sec[k])sec[k]=0;if(sec[k]>=5)continue;sec[k]++;res.push(s);if(res.length>=50)break;}
   return res;
 }
 
@@ -2686,7 +2686,7 @@ function renderSpreads() {
   const el=document.getElementById('spreadsPanel');
   const sellPF=dailyPortfolios.find(p=>p.type==='sell'&&p.status==='active');
   if(!sellPF){el.innerHTML='<div class="empty">No active SELL portfolio</div>';return}
-  el.innerHTML=sellPF.stocks.slice(0,15).map(s=>{
+  el.innerHTML=sellPF.stocks.map(s=>{
     const hvpData=allStockData[s.symbol];
     const hvp=hvpData&&hvpData.rows.length>1?20:20;
     const atm=Math.round(s.cmp/50)*50;
